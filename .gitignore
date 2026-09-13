@@ -1,0 +1,4 @@
+# Local Pixlet render output
+apps/*/*.webp
+.DS_Store
+.starcache/
