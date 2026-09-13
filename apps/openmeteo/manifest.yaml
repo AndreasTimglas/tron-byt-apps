@@ -1,0 +1,13 @@
+---
+id: openmeteo
+name: OpenMeteo Weather
+summary: Compact Celsius weather
+desc: Current temperature, humidity, feels-like temperature, daily high and low, and precipitation probability on a fixed 64x32 display. Select a location; no API key required.
+author: andreastimglas
+fileName: openmeteo.star
+packageName: openmeteo
+category: weather
+tags:
+  - weather
+  - utility
+minPixletVersion: v0.54.0
