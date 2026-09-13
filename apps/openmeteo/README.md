@@ -30,7 +30,7 @@ also require a preview image and repository submission metadata.
 ## Display
 
 The left 32 pixels contain the larger current temperature in °C, a 9×9 pixel
-condition graphic, and cyan `RH` relative humidity in percent. A one-pixel
+condition graphic, and cyan `H%` followed by relative humidity (for example, `H%65` means 65%). A one-pixel
 divider separates four 8-pixel rows on the right:
 
 | Label | Meaning |
@@ -38,7 +38,7 @@ divider separates four 8-pixel rows on the right:
 | F | Current apparent / feels-like temperature, Celsius |
 | H | Today's maximum temperature, Celsius |
 | L | Today's minimum temperature, Celsius |
-| P | Today's maximum precipitation probability, percent |
+| Blue droplet | Today's maximum precipitation probability, percent |
 
 Temperatures round to whole degrees, with halves rounded away from zero.
 Missing individual readings show `--`. Sun, partly cloudy, cloud, fog, rain,
@@ -54,7 +54,7 @@ The [Open-Meteo forecast API](https://open-meteo.com/en/docs) receives:
 - Daily: `temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code`
 - `temperature_unit=celsius`, `forecast_days=1`, and the configured timezone.
 
-Daily values refer to today in the selected timezone. `P` is the maximum daily
+Daily values refer to today in the selected timezone. The blue droplet shows the maximum daily
 probability, not an instantaneous probability. The daily weather code is
 requested as specified; the graphic uses the current code.
 Responses are cached for 600 seconds. Schedule refreshes about every 10 minutes.

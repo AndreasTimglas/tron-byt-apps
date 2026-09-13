@@ -60,6 +60,19 @@ def icon(code):
         for pixel in line.elems()
     ]) for line in pixels])
 
+def precipitation(value):
+    # A 5x7 droplet with one pixel of spacing, fitting an 8-pixel row.
+    pixels = ["..b..", "..b..", ".bbb.", ".bbb.", "bbbbb", "bbbbb", ".bbb."]
+    droplet = render.Column(children = [render.Row(children = [
+        render.Box(width = 1, height = 1, color = "#66ddff" if pixel == "b" else "#000000")
+        for pixel in line.elems()
+    ]) for line in pixels])
+    return render.Row(cross_align = "center", children = [
+        droplet,
+        render.Box(width = 1, height = 8),
+        render.Text(number(value, "%"), font = "tb-8"),
+    ])
+
 def reading(label, value, color):
     return render.Row(children = [
         render.Text(label, font = "tb-8", color = color),
@@ -80,7 +93,7 @@ def weather_screen(data):
             children = [
                 render.Text(temperature, font = "6x13" if len(temperature) <= 5 else "tb-8", height = 13),
                 render.Box(width = 32, height = 11, child = icon(current.get("weather_code"))),
-                render.Text("RH" + number(current.get("relative_humidity_2m"), "%"), font = "tb-8", color = "#66ddff"),
+                render.Text("H%" + number(current.get("relative_humidity_2m")), font = "tb-8", color = "#66ddff"),
             ],
         )),
         render.Box(width = 1, height = 32, color = "#333333"),
@@ -90,7 +103,7 @@ def weather_screen(data):
                 reading("F", number(current.get("apparent_temperature"), "°"), "#ffcc66"),
                 reading("H", number(first(daily, "temperature_2m_max"), "°"), "#ff8866"),
                 reading("L", number(first(daily, "temperature_2m_min"), "°"), "#77aaff"),
-                reading("P", number(first(daily, "precipitation_probability_max"), "%"), "#66ddff"),
+                precipitation(first(daily, "precipitation_probability_max")),
             ],
         )),
     ]))
