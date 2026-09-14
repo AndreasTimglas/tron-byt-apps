@@ -15,7 +15,8 @@ pixlet serve apps/usdsek/usdsek.star
 ```
 
 There are no settings: the pair is always USD → SEK. `USD>SEK` above `9.52`
-means **1 USD = 9.52 SEK**. The rate has two decimal places; percentage change
+means **1 USD = 9.52 SEK**. The rate and percentage sit together in a centered row with a four-pixel gap.
+The rate has two decimal places; percentage change
 has one decimal place and an explicit sign. `7D` labels the comparison.
 The chart occupies the bottom 16 rows and all 64 columns. A dim dotted line marks the starting rate, without a full grid or
 axes; its white endpoint marks the latest available observation.
