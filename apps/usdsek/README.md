@@ -17,6 +17,8 @@ pixlet serve apps/usdsek/usdsek.star
 There are no settings: the pair is always USD → SEK. `USD>SEK` above `9.52`
 means **1 USD = 9.52 SEK**. The rate is left-aligned and the percentage right-aligned, each inset five pixels
 from its side of the display (54 pixels of usable row width).
+The USD>SEK title aligns left above the rate, and 7D aligns right above the
+percentage, using the same five-pixel margins.
 The rate has two decimal places; percentage change
 has one decimal place and an explicit sign. `7D` labels the comparison.
 The chart occupies the bottom 16 rows and all 64 columns. A dim dotted line marks the starting rate, without a full grid or
@@ -76,7 +78,7 @@ Non-200 HTTP responses, malformed JSON, empty data, and invalid rate rows are
 handled. Pixlet's normal `cache.star` stores a successful response for up to
 seven days. Fresh entries avoid another request for six hours. On an HTTP/data
 failure, usable cached observations still within the current 7-day window
-are shown with an asterisk (`USD>SEK 7D*`) and an amber change label. Without usable
+are shown with an asterisk (`USD>SEK*`) and an amber change label. Without usable
 cached data, a compact `USD>SEK / NO DATA` screen is displayed. Cache persistence
 depends on the host; independent CLI runs need not share a persistent cache.
 

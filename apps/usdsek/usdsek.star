@@ -92,7 +92,10 @@ def screen(points, stale = False):
     change = percent_change(points[0][1], latest)
     label = ("-" if change < 0 else "+") + fixed(change, 1) + "%"
     return render.Root(child = render.Column(cross_align = "center", children = [
-        render.Text("USD>SEK 7D" + ("*" if stale else ""), font = "tom-thumb", height = 6, color = "#66ddff"),
+        render.Padding(pad = (5, 0, 5, 0), child = render.Row(expanded = True, main_align = "space_between", children = [
+            render.Text("USD>SEK" + ("*" if stale else ""), font = "tom-thumb", height = 6, color = "#66ddff"),
+            render.Text("7D", font = "tom-thumb", height = 6, color = "#66ddff"),
+        ])),
         render.Padding(pad = (5, 0, 5, 0), child = render.Row(expanded = True, main_align = "space_between", cross_align = "center", children = [
             render.Text(fixed(latest, 2), font = "6x10", height = 10),
             render.Text(label, font = "tom-thumb", height = 6, color = "#ffbb66" if stale else "#dddddd"),
