@@ -15,6 +15,12 @@ def get_schema():
             name = "Location",
             desc = "Choose the location for your Celsius weather forecast.",
             icon = "locationDot",
+        ), schema.Toggle(
+            id = "details",
+            name = "Show extra details",
+            desc = "Use the denser layout with current humidity and feels-like temperature.",
+            icon = "sliders",
+            default = False,
         )],
     )
 
@@ -63,7 +69,7 @@ def icon(code):
 def small(text, color = "#ffffff", height = 5):
     return render.Text(text, font = "CG-pixel-3x5-mono", height = height, color = color)
 
-def precipitation(value):
+def precipitation(value, compact = True):
     # A compact 3x5 droplet; six pixels total row height.
     pixels = [".b.", ".b.", "bbb", "bbb", ".b."]
     droplet = render.Column(children = [render.Row(children = [
@@ -73,19 +79,48 @@ def precipitation(value):
     return render.Row(cross_align = "center", children = [
         droplet,
         render.Box(width = 1, height = 6),
-        small(number(value, "%")),
+        small(number(value, "%")) if compact else render.Text(number(value, "%"), font = "tb-8"),
     ])
 
 def cell(width, height, child):
     return render.Box(width = width, height = height, child = child)
 
-def weather_screen(data):
+def simple_screen(current, daily):
+    columns = []
+    for day in range(2):
+        condition = icon(current.get("weather_code") if day == 0 else day_value(daily, "weather_code", day))
+        if day == 0:
+            temperature = number(current.get("temperature_2m"), "°C")
+            condition = render.Row(cross_align = "center", children = [
+                condition,
+                render.Box(width = 1, height = 1),
+                render.Text(temperature, font = "tb-8" if len(temperature) <= 4 else "tom-thumb"),
+            ])
+        columns.append(render.Column(cross_align = "center", children = [
+            cell(31, 6, render.Text("TODAY" if day == 0 else "TMRW", font = "tom-thumb", color = "#aaaaaa")),
+            cell(31, 10, condition),
+            cell(31, 8, render.Row(children = [
+                render.Text(number(day_value(daily, "temperature_2m_max", day)), font = "tom-thumb", color = "#ff8866"),
+                render.Text("/", font = "tom-thumb", color = "#666666"),
+                render.Text(number(day_value(daily, "temperature_2m_min", day)), font = "tom-thumb", color = "#77aaff"),
+            ])),
+            cell(31, 8, precipitation(day_value(daily, "precipitation_probability_max", day), compact = False)),
+        ]))
+    return render.Root(max_age = 1800, child = render.Row(children = [
+        columns[0],
+        render.Box(width = 2, height = 32, color = "#181818"),
+        columns[1],
+    ]))
+
+def weather_screen(data, details = False):
     if type(data) != "dict" or data.get("error"):
         return error_screen("API ERROR")
     current = data.get("current")
     daily = data.get("daily")
     if type(current) != "dict" or type(daily) != "dict" or current.get("temperature_2m") == None:
         return error_screen("NO DATA")
+    if not details:
+        return simple_screen(current, daily)
     temperature = number(current.get("temperature_2m"), "°C")
 
     # 42px today + 1px divider + 21px tomorrow. Every column totals 32px.
@@ -142,4 +177,4 @@ def main(config):
     }, ttl_seconds = 600)
     if response.status_code != 200:
         return error_screen("API ERROR")
-    return weather_screen(json.decode(response.body(), default = None))
+    return weather_screen(json.decode(response.body(), default = None), details = config.bool("details"))

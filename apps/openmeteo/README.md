@@ -29,28 +29,27 @@ also require a preview image and repository submission metadata.
 
 ## Display
 
-The static 64×32 layout uses 42 pixels for **TODAY**, a one-pixel divider,
-and 21 pixels for **TMRW**. The compact bitmap labels keep both days visible
-without scrolling.
+The default 64×32 view uses two balanced 31-pixel columns separated by a
+2-pixel divider. Each has four generously spaced rows:
 
-- Today: current condition icon and temperature in °C; high (`H`) and low
-  (`L`); feels-like (`F`) and relative humidity (`H%`); droplet plus today's
-  maximum precipitation probability.
-- Tomorrow: daily condition icon, high (`H`), low (`L`), and droplet plus
-  tomorrow's maximum precipitation probability.
+- **TODAY / TMRW** heading.
+- Condition icon; today also shows the current temperature in °C.
+- High / low temperatures: warm-colored high, blue low, separated by `/`.
+- Blue droplet and precipitation probability in percent.
 
-All temperature readings are Celsius. Humidity and precipitation probability
-are different measures; `H%65` means 65% relative humidity. Temperatures round
-to whole degrees, with halves rounded away from zero. Missing readings show
-`--`, and missing/unknown condition codes show `?`.
+All temperatures are Celsius. Tomorrow uses its daily condition code, while
+today uses the current code. Both daily forecasts follow the selected location's
+timezone. Missing values show `--` and missing condition codes show `?`.
 
-The daily arrays supply today at index 0 and tomorrow at index 1, in the
-selected location's timezone. Tomorrow's icon represents its daily weather
-code; today's icon represents the current weather. Clear conditions use the
-sun graphic even at night because day/night information is not requested.
+**Show extra details** is off by default. Enable it in Manager to restore the
+denser 42/21-pixel layout with current feels-like (`F`) and relative humidity
+(`H%`) as well as the two-day forecast. The compact view prioritizes readability;
+the detailed view fits more information with smaller, tightly spaced labels.
+Humidity is distinct from precipitation probability.
 
-The smaller auxiliary labels trade some distance readability for simultaneous
-access to both days. The icons and current temperature remain larger.
+Temperatures round to whole degrees, with halves rounded away from zero.
+The sun graphic indicates clear conditions, including at night, because no
+day/night field is requested.
 
 ## Data and failure handling
 
