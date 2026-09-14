@@ -2,7 +2,7 @@
 id: usdsek
 name: USD SEK
 summary: Dollar to krona with trend
-desc: Latest ECB USD to SEK reference rate and a 30-day trend with a buffered chart scale. No API key required.
+desc: Latest ECB USD to SEK reference rate and a 7-day trend with a buffered chart scale. No API key required.
 author: andreastimglas
 fileName: usdsek.star
 packageName: usdsek

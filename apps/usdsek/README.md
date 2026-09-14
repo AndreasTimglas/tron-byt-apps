@@ -1,7 +1,7 @@
 # USD SEK
 
 A fixed 64×32 Tronbyt/Pixlet app showing **SEK per 1 USD**, the period change,
-and a simple 30-day line chart. No API key, registration, OAuth, or secrets.
+and a simple 7-day line chart. No API key, registration, OAuth, or secrets.
 The MatrixPortal S3 displays the image rendered by the Tronbyt server.
 
 ## Run
@@ -16,8 +16,8 @@ pixlet serve apps/usdsek/usdsek.star
 
 There are no settings: the pair is always USD → SEK. `USD>SEK` above `9.52`
 means **1 USD = 9.52 SEK**. The rate has two decimal places; percentage change
-has one decimal place and an explicit sign. `30D` labels the comparison.
-The chart occupies the bottom 10 rows and all 64 columns. It has no grid or
+has one decimal place and an explicit sign. `7D` labels the comparison.
+The chart occupies the bottom 16 rows and all 64 columns. A dim dotted line marks the starting rate, without a full grid or
 axes; its white endpoint marks the latest available observation.
 
 ## Data source and refresh
@@ -30,7 +30,7 @@ https://api.frankfurter.dev/v2/rates?base=USD&quotes=SEK&providers=ecb&from=YYYY
 ```
 
 One time-series request supplies both history and the latest available rate.
-The window contains today in UTC and the preceding 29 calendar days. Rows are
+The window contains today in UTC and the preceding 6 calendar days. Rows are
 sorted and filtered to that window; a preceding business-day row returned by
 the API is excluded. Weekends and holidays without observations are normal.
 The latest actual observation is used; missing dates are not filled with zero.
@@ -73,8 +73,8 @@ chart; the numeric percentage provides finer detail without exaggeration.
 Non-200 HTTP responses, malformed JSON, empty data, and invalid rate rows are
 handled. Pixlet's normal `cache.star` stores a successful response for up to
 seven days. Fresh entries avoid another request for six hours. On an HTTP/data
-failure, usable cached observations still within the current 30-day window
-are shown with an asterisk (`USD>SEK*`) and an amber change label. Without usable
+failure, usable cached observations still within the current 7-day window
+are shown with an asterisk (`USD>SEK 7D*`) and an amber change label. Without usable
 cached data, a compact `USD>SEK / NO DATA` screen is displayed. Cache persistence
 depends on the host; independent CLI runs need not share a persistent cache.
 

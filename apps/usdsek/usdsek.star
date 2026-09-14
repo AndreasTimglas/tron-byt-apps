@@ -6,7 +6,9 @@ load("schema.star", "schema")
 load("time.star", "time")
 
 URL = "https://api.frankfurter.dev/v2/rates"
-CACHE_KEY = "usdsek-ecb-v1"
+CACHE_KEY = "usdsek-ecb-7d-v2"
+PERIOD_DAYS = 7
+CHART_HEIGHT = 16
 REFRESH_SECONDS = 21600
 
 def get_schema():
@@ -57,10 +59,18 @@ def percent_change(oldest, latest):
 
 def chart(points):
     low, high = chart_bounds([point[1] for point in points])
-    coords = [(int(day * 63 / 29), int((high - rate) * 9 / (high - low) + 0.5)) for day, rate in points]
-    children = [render.Box(width = 64, height = 10)]
+    coords = [(int(day * 63 / (PERIOD_DAYS - 1)), int((high - rate) * (CHART_HEIGHT - 1) / (high - low) + 0.5)) for day, rate in points]
+    children = [render.Box(width = 64, height = CHART_HEIGHT)]
+
+    # Dim baseline shows where the period began without adding a full grid.
+    baseline = coords[0][1]
+    for x in range(0, 64, 4):
+        children.append(render.Padding(pad = (x, baseline, 0, 0), child = render.Box(width = 1, height = 1, color = "#333333")))
     for i in range(1, len(coords)):
-        children.append(render.Line(
+        # Line normalizes its own bounds; explicitly place each segment.
+        left = min(coords[i - 1][0], coords[i][0])
+        top = min(coords[i - 1][1], coords[i][1])
+        children.append(render.Padding(pad = (left, top, 0, 0), child = render.Line(
             x1 = coords[i - 1][0],
             y1 = coords[i - 1][1],
             x2 = coords[i][0],
@@ -68,7 +78,7 @@ def chart(points):
             width = 1,
             color = "#66ddff",
             antialias = False,
-        ))
+        )))
 
     # Visible even if there is just one available observation.
     x, y = coords[-1]
@@ -80,11 +90,13 @@ def screen(points, stale = False):
         return error_screen()
     latest = points[-1][1]
     change = percent_change(points[0][1], latest)
-    label = ("-" if change < 0 else "+") + fixed(change, 1) + "% 30D"
+    label = ("-" if change < 0 else "+") + fixed(change, 1) + "%"
     return render.Root(child = render.Column(cross_align = "center", children = [
-        render.Text("USD>SEK" + ("*" if stale else ""), font = "tom-thumb", height = 6, color = "#66ddff"),
-        render.Text(fixed(latest, 2), font = "6x10", height = 10),
-        render.Text(label, font = "tom-thumb", height = 6, color = "#ffbb66" if stale else "#dddddd"),
+        render.Text("USD>SEK 7D" + ("*" if stale else ""), font = "tom-thumb", height = 6, color = "#66ddff"),
+        render.Row(expanded = True, main_align = "space_between", cross_align = "center", children = [
+            render.Text(fixed(latest, 2), font = "6x10", height = 10),
+            render.Text(label, font = "tom-thumb", height = 6, color = "#ffbb66" if stale else "#dddddd"),
+        ]),
         chart(points),
     ]))
 
@@ -92,7 +104,7 @@ def screen(points, stale = False):
 # buildifier: disable=unused-variable
 def main(config):
     now = time.now().in_location("UTC")
-    dates = [(now - time.parse_duration("%dh" % (24 * day))).format("2006-01-02") for day in range(29, -1, -1)]
+    dates = [(now - time.parse_duration("%dh" % (24 * day))).format("2006-01-02") for day in range(PERIOD_DAYS - 1, -1, -1)]
     cached = json.decode(cache.get(CACHE_KEY) or "null", default = None)
     fallback = []
     if type(cached) == "dict":
