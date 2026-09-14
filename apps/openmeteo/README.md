@@ -29,22 +29,28 @@ also require a preview image and repository submission metadata.
 
 ## Display
 
-The left 32 pixels contain the larger current temperature in °C, a 9×9 pixel
-condition graphic, and cyan `H%` followed by relative humidity (for example, `H%65` means 65%). A one-pixel
-divider separates four 8-pixel rows on the right:
+The static 64×32 layout uses 42 pixels for **TODAY**, a one-pixel divider,
+and 21 pixels for **TMRW**. The compact bitmap labels keep both days visible
+without scrolling.
 
-| Label | Meaning |
-| --- | --- |
-| F | Current apparent / feels-like temperature, Celsius |
-| H | Today's maximum temperature, Celsius |
-| L | Today's minimum temperature, Celsius |
-| Blue droplet | Today's maximum precipitation probability, percent |
+- Today: current condition icon and temperature in °C; high (`H`) and low
+  (`L`); feels-like (`F`) and relative humidity (`H%`); droplet plus today's
+  maximum precipitation probability.
+- Tomorrow: daily condition icon, high (`H`), low (`L`), and droplet plus
+  tomorrow's maximum precipitation probability.
 
-Temperatures round to whole degrees, with halves rounded away from zero.
-Missing individual readings show `--`. Sun, partly cloudy, cloud, fog, rain,
-snow, and thunderstorm graphics use the current WMO weather code; unknown
-codes show `?`. The sun graphic denotes clear conditions, including at night,
-because the requested fields do not include day/night information.
+All temperature readings are Celsius. Humidity and precipitation probability
+are different measures; `H%65` means 65% relative humidity. Temperatures round
+to whole degrees, with halves rounded away from zero. Missing readings show
+`--`, and missing/unknown condition codes show `?`.
+
+The daily arrays supply today at index 0 and tomorrow at index 1, in the
+selected location's timezone. Tomorrow's icon represents its daily weather
+code; today's icon represents the current weather. Clear conditions use the
+sun graphic even at night because day/night information is not requested.
+
+The smaller auxiliary labels trade some distance readability for simultaneous
+access to both days. The icons and current temperature remain larger.
 
 ## Data and failure handling
 
@@ -52,11 +58,10 @@ The [Open-Meteo forecast API](https://open-meteo.com/en/docs) receives:
 
 - Current: `temperature_2m,relative_humidity_2m,apparent_temperature,weather_code`
 - Daily: `temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code`
-- `temperature_unit=celsius`, `forecast_days=1`, and the configured timezone.
+- `temperature_unit=celsius`, `forecast_days=2`, and the configured timezone.
 
-Daily values refer to today in the selected timezone. The blue droplet shows the maximum daily
-probability, not an instantaneous probability. The daily weather code is
-requested as specified; the graphic uses the current code.
+Daily values refer to today and tomorrow in the selected timezone. Each blue
+droplet shows that day's maximum probability, not an instantaneous probability.
 Responses are cached for 600 seconds. Schedule refreshes about every 10 minutes.
 Successful render roots carry `max_age=1800` as a host/device expiration hint.
 
@@ -82,7 +87,7 @@ with `json.decode(..., default=None)`, both verified against the current runtime
 
 Validated with Tronbyt Pixlet v0.54.0: `pixlet check`, live Open-Meteo rendering,
 unconfigured and invalid-location screens, and synthetic weather renders for
-negative temperatures and 100% readings. The layout uses built-in bitmap fonts
+negative temperatures, 100% readings, and missing tomorrow data. The layout uses built-in bitmap fonts
 and original pixel graphics, without unsupported drawing or exception APIs.
 
 Weather data by [Open-Meteo](https://open-meteo.com/), under

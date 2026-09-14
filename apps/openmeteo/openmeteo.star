@@ -31,9 +31,9 @@ def number(value, suffix = ""):
     # Round halves away from zero, including negative temperatures.
     return str(int(value + 0.5 if value >= 0 else value - 0.5)) + suffix
 
-def first(daily, key):
+def day_value(daily, key, day):
     values = daily.get(key)
-    return values[0] if type(values) == "list" and values else None
+    return values[day] if type(values) == "list" and len(values) > day else None
 
 def icon(code):
     # Original 9x9 pixel graphics. No external assets or emoji font needed.
@@ -60,24 +60,24 @@ def icon(code):
         for pixel in line.elems()
     ]) for line in pixels])
 
+def small(text, color = "#ffffff", height = 5):
+    return render.Text(text, font = "CG-pixel-3x5-mono", height = height, color = color)
+
 def precipitation(value):
-    # A 5x7 droplet with one pixel of spacing, fitting an 8-pixel row.
-    pixels = ["..b..", "..b..", ".bbb.", ".bbb.", "bbbbb", "bbbbb", ".bbb."]
+    # A compact 3x5 droplet; six pixels total row height.
+    pixels = [".b.", ".b.", "bbb", "bbb", ".b."]
     droplet = render.Column(children = [render.Row(children = [
         render.Box(width = 1, height = 1, color = "#66ddff" if pixel == "b" else "#000000")
         for pixel in line.elems()
     ]) for line in pixels])
     return render.Row(cross_align = "center", children = [
         droplet,
-        render.Box(width = 1, height = 8),
-        render.Text(number(value, "%"), font = "tb-8"),
+        render.Box(width = 1, height = 6),
+        small(number(value, "%")),
     ])
 
-def reading(label, value, color):
-    return render.Row(children = [
-        render.Text(label, font = "tb-8", color = color),
-        render.Text(value, font = "tb-8"),
-    ])
+def cell(width, height, child):
+    return render.Box(width = width, height = height, child = child)
 
 def weather_screen(data):
     if type(data) != "dict" or data.get("error"):
@@ -87,25 +87,38 @@ def weather_screen(data):
     if type(current) != "dict" or type(daily) != "dict" or current.get("temperature_2m") == None:
         return error_screen("NO DATA")
     temperature = number(current.get("temperature_2m"), "°C")
+
+    # 42px today + 1px divider + 21px tomorrow. Every column totals 32px.
+    today = render.Column(cross_align = "center", children = [
+        cell(42, 5, small("TODAY", "#aaaaaa")),
+        cell(42, 10, render.Row(cross_align = "center", children = [
+            icon(current.get("weather_code")),
+            render.Box(width = 2, height = 1),
+            render.Text(temperature, font = "tb-8"),
+        ])),
+        cell(42, 6, render.Row(children = [
+            small("H" + number(day_value(daily, "temperature_2m_max", 0)), "#ff8866"),
+            render.Box(width = 3, height = 1),
+            small("L" + number(day_value(daily, "temperature_2m_min", 0)), "#77aaff"),
+        ])),
+        cell(42, 5, render.Row(children = [
+            small("F" + number(current.get("apparent_temperature")), "#ffcc66"),
+            render.Box(width = 2, height = 1),
+            small("H%" + number(current.get("relative_humidity_2m")), "#66ddff"),
+        ])),
+        cell(42, 6, precipitation(day_value(daily, "precipitation_probability_max", 0))),
+    ])
+    tomorrow = render.Column(cross_align = "center", children = [
+        cell(21, 5, small("TMRW", "#aaaaaa")),
+        cell(21, 10, icon(day_value(daily, "weather_code", 1))),
+        cell(21, 6, small("H" + number(day_value(daily, "temperature_2m_max", 1)), "#ff8866")),
+        cell(21, 5, small("L" + number(day_value(daily, "temperature_2m_min", 1)), "#77aaff")),
+        cell(21, 6, precipitation(day_value(daily, "precipitation_probability_max", 1))),
+    ])
     return render.Root(max_age = 1800, child = render.Row(children = [
-        render.Box(width = 32, height = 32, child = render.Column(
-            cross_align = "center",
-            children = [
-                render.Text(temperature, font = "6x13" if len(temperature) <= 5 else "tb-8", height = 13),
-                render.Box(width = 32, height = 11, child = icon(current.get("weather_code"))),
-                render.Text("H%" + number(current.get("relative_humidity_2m")), font = "tb-8", color = "#66ddff"),
-            ],
-        )),
+        today,
         render.Box(width = 1, height = 32, color = "#333333"),
-        render.Box(width = 31, height = 32, child = render.Column(
-            cross_align = "start",
-            children = [
-                reading("F", number(current.get("apparent_temperature"), "°"), "#ffcc66"),
-                reading("H", number(first(daily, "temperature_2m_max"), "°"), "#ff8866"),
-                reading("L", number(first(daily, "temperature_2m_min"), "°"), "#77aaff"),
-                precipitation(first(daily, "precipitation_probability_max")),
-            ],
-        )),
+        tomorrow,
     ]))
 
 def main(config):
@@ -123,7 +136,7 @@ def main(config):
         "longitude": location["lng"],
         "timezone": location.get("timezone") or "auto",
         "temperature_unit": "celsius",
-        "forecast_days": "1",
+        "forecast_days": "2",
         "current": CURRENT,
         "daily": DAILY,
     }, ttl_seconds = 600)
