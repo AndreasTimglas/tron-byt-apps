@@ -1,0 +1,14 @@
+---
+id: cityflip
+name: City Flip
+summary: City and 24-hour clock
+desc: A small city label above large split-flap-style 24-hour digits on a 64x32 display. Defaults to Malmö and its local timezone.
+author: andreastimglas
+fileName: cityflip.star
+packageName: cityflip
+recommendedInterval: 1
+category: clocks
+tags:
+  - clock
+  - utility
+minPixletVersion: v0.54.0
