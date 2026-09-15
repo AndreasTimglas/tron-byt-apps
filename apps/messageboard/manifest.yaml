@@ -1,0 +1,14 @@
+---
+id: messageboard
+name: Message Board
+summary: Send a note from your phone
+desc: Display the latest message from your local Message Board web page, with readable pages, colors and optional expiry.
+author: andreastimglas
+fileName: messageboard.star
+packageName: messageboard
+recommendedInterval: 1
+category: utilities
+tags:
+  - utility
+  - messages
+minPixletVersion: v0.54.0

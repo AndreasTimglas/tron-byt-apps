@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f3ed"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>Little messages · Tronbyt</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+</head>
+<body><main>
+<header><a class="brand" href="/"><span class="brand-icon">✳</span> THE MESSAGE BOARD</a><span id="connection" class="connection">Connecting…</span></header>
+<section class="intro"><p class="eyebrow">A LITTLE NOTE. A BIG SMILE.</p><h1>Say it on<br>the display.</h1><p>A welcome, a surprise, or a reminder.<br>Send a little message to your home.</p></section>
+<div class="workspace">
+<section class="composer card"><form id="composer">
+<div class="label-row"><label for="message">Your message</label><span id="counter">0 / 120</span></div>
+<textarea id="message" maxlength="120" rows="4" placeholder="There is a present under the bed..." required></textarea>
+<div class="ideas"><span>Try a note</span><button type="button" data-example="Welcome to our home!">Welcome guests</button><button type="button" data-example="There is a present under the bed">A little surprise</button></div>
+<fieldset><legend>Text color</legend><div class="colors">
+<label class="swatch white"><input type="radio" name="color" value="white" checked><span>White</span></label>
+<label class="swatch green"><input type="radio" name="color" value="green"><span>Green</span></label>
+<label class="swatch yellow"><input type="radio" name="color" value="yellow"><span>Yellow</span></label>
+<label class="swatch pink"><input type="radio" name="color" value="pink"><span>Pink</span></label>
+</div></fieldset>
+<label for="expiry">Keep the message for</label><select id="expiry"><option value="0">Until I clear it</option><option value="15">15 minutes</option><option value="60">1 hour</option><option value="240">4 hours</option><option value="1440">24 hours</option></select>
+<button id="send" class="primary" type="submit" disabled>Send to display <span aria-hidden="true">↗</span></button>
+<p class="hint">Updates on the next display refresh, usually within a minute.</p><p id="feedback" role="status" aria-live="polite"></p>
+</form></section>
+<aside>
+<section class="preview-card"><div class="preview-heading"><span>YOUR NOTE</span><span>PREVIEW</span></div><div class="led-display"><p id="preview">A little hello<br>goes a long way.</p></div><p class="preview-hint">Long messages appear over several pages.</p></section>
+<section class="saved card"><div class="saved-title"><h2>Currently saved</h2><span id="active-indicator" class="dot"></span></div><p id="saved-message">Loading your message…</p><p id="saved-info" class="hint"></p><button id="clear" type="button" class="secondary" disabled>Clear the display</button></section>
+<p class="home-note">Made for your home Wi-Fi.<br>In Safari, use Share → Add to Home Screen.</p>
+</aside></div><footer>Small messages, shared moments.</footer>
+</main></body></html>

@@ -1,0 +1,22 @@
+services:
+  messageboard:
+    build: .
+    ports:
+      - "8787:8787"
+    environment:
+      BOARD_ALLOWED_HOSTS: "${BOARD_ALLOWED_HOSTS:-localhost,127.0.0.1,tidbyt-pi.local,192.168.0.127}"
+    volumes:
+      - board_data:/data
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  board_data:
