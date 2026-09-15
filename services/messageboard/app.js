@@ -1,6 +1,10 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 const palette = {white:"#ffffff",green:"#66ff66",yellow:"#ffdd66",pink:"#ff88bb"};
+const flowerMode = location.pathname === "/flowers";
+const messageEndpoint = flowerMode ? "/api/flowers" : "/api/message";
+const clearEndpoint = flowerMode ? "/api/flowers/clear" : "/api/clear";
+let previewTimer = null;
 let busy = false;
 let lastSaved = null;
 function normalized() { return $("message").value.normalize("NFC").replace(/[‘’]/gu,"'").replace(/[“”]/gu,'"').replace(/[–—]/gu,"-").replace(/…/gu,"...").replace(/\s+/gu," ").trim(); }
@@ -15,10 +19,15 @@ function draft() {
  else if(!busy) feedback("");
 }
 function renderPreview(text) {
+ clearInterval(previewTimer);
  const container = $("preview-pages");
  container.replaceChildren();
  if (text && !valid(text)) {
   $("page-count").textContent = "Correct the unsupported characters to preview your message.";
+  return;
+ }
+ if (flowerMode) {
+  previewTimer = flowerPreview(text, palette[document.querySelector('input[name="color"]:checked').value]);
   return;
  }
  const lines = boardLines(text);
@@ -63,14 +72,14 @@ async function request(path,payload) {
 }
 async function refresh() {
  if(busy) return;
- try{showSaved(await request("/api/message"));}
+ try{showSaved(await request(messageEndpoint));}
  catch{$("connection").textContent="Connection unavailable";$("connection").className="connection";}
 }
 async function send(clear=false) {
  if(busy) return;
  busy=true;$("send").disabled=true;$("clear").disabled=true;feedback(clear?"Clearing…":"Saving your message…");
  try{
-  const data=await request(clear?"/api/clear":"/api/message",clear?{}:{text:normalized(),color:document.querySelector('input[name="color"]:checked').value,expires_minutes:Number($("expiry").value)});
+  const data=await request(clear?clearEndpoint:messageEndpoint,clear?{}:{text:normalized(),color:document.querySelector('input[name="color"]:checked').value,expires_minutes:Number($("expiry").value)});
   showSaved(data);
   feedback(clear?"Cleared. The display will update on its next refresh.":"Saved! Your message will appear on the next display refresh.");
  }catch(error){feedback(error.name==="AbortError"?"The request timed out. Check Currently saved before trying again.":error.message||"Could not connect. Please try again.",true);}

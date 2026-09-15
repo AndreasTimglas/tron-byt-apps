@@ -149,3 +149,17 @@ Pixel parity can be checked with Node, Pillow and Pixlet installed:
 ~~~sh
 python3 services/messageboard/check_preview.py /path/to/pixlet
 ~~~
+
+## Anna Flowers composer
+
+Open **http://tidbyt-pi.local:8787/flowers** or use the Anna Flowers link.
+It shares this service but saves messages separately in flowers.json in the
+same persistent volume. The normal Message Board is unaffected.
+
+Configure Anna Flowers in Tronbyt Manager with the same Message server URL,
+a 1-minute refresh and a 15-second display duration. Update the custom apps
+repository to get the new configuration field. Without a URL, Anna Flowers
+keeps its original greeting. With a URL, it shows only active flower messages.
+
+The composer previews the flower border and scrolling pixel text. It supports
+the same colors, 120-character limit, expiry choices and Clear button.

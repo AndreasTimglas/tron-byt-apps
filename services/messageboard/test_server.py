@@ -85,6 +85,20 @@ class BoardTests(unittest.TestCase):
         for minutes in [0, 240, -1, 60.0, "60", None]:
             self.assertEqual(self.request("POST", "/api/message", {"text": "Invalid", "expires_minutes": minutes})[0], 400)
 
+    def test_flowers_are_independent_and_persist(self):
+        self.store.save("Board")
+        code, body = self.request("POST", "/api/flowers", {"text": "Anna, Malmö!", "expires_minutes": 5})
+        self.assertEqual(code, 200)
+        self.assertEqual(json.loads(body)["text"], "Anna, Malmö!")
+        self.assertEqual(self.store.read()["text"], "Board")
+        self.assertEqual(Store(self.path.with_name("flowers.json")).read()["text"], "Anna, Malmö!")
+        self.assertEqual(self.request("GET", "/flowers")[0], 200)
+        self.assertEqual(self.request("GET", "/flowers.js")[0], 200)
+        self.assertEqual(json.loads(self.request("GET", "/api/flowers")[1])["text"], "Anna, Malmö!")
+        self.assertEqual(self.request("POST", "/api/flowers/clear", {})[0], 200)
+        self.assertFalse(self.server.flowers.read()["active"])
+        self.assertEqual(self.store.read()["text"], "Board")
+
     def test_smart_punctuation_and_composed_unicode(self):
         text, _, _ = validate({"text": "  There’s a gift…  Malmo\u0308 "})
         self.assertEqual(text, "There's a gift... Malmö")

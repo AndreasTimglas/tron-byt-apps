@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 COLORS = {"white": "#ffffff", "green": "#66ff66", "yellow": "#ffdd66", "pink": "#ff88bb"}
 EXPIRIES = {5, 15, 30, 60, 180, 360, 1440}
-STATIC = {"/font.js": ("font.js", "text/javascript; charset=utf-8"), "/layout.js": ("layout.js", "text/javascript; charset=utf-8"), "/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
+STATIC = {"/flowers": ("flowers.html", "text/html; charset=utf-8"), "/flowers.js": ("flowers.js", "text/javascript; charset=utf-8"), "/font.js": ("font.js", "text/javascript; charset=utf-8"), "/layout.js": ("layout.js", "text/javascript; charset=utf-8"), "/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
 
 
 def validate(payload):
@@ -87,6 +87,7 @@ class Server(ThreadingHTTPServer):
 
     def __init__(self, address, store, allowed_hosts):
         self.store = store
+        self.flowers = Store(store.path.with_name("flowers.json"))
         self.allowed_hosts = set(allowed_hosts)
         super().__init__(address, Handler)
 
@@ -126,8 +127,9 @@ class Handler(BaseHTTPRequestHandler):
         if not self.host_allowed():
             return
         path = urlsplit(self.path).path
-        if path == "/api/message":
-            self.respond(200, self.server.store.read())
+        if path in ("/api/message", "/api/flowers"):
+            store = self.server.flowers if path == "/api/flowers" else self.server.store
+            self.respond(200, store.read())
         elif path == "/health":
             self.respond(200, {"ok": True})
         elif path in STATIC:
@@ -148,7 +150,7 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(415, {"error": "Expected JSON"})
             return
         path = urlsplit(self.path).path
-        if path not in ("/api/message", "/api/clear"):
+        if path not in ("/api/message", "/api/clear", "/api/flowers", "/api/flowers/clear"):
             self.respond(404, {"error": "Not found"})
             return
         try:
@@ -157,10 +159,11 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(413, {"error": "Request is too large or empty"})
                 return
             payload = json.loads(self.rfile.read(size))
-            if path == "/api/clear":
-                state = self.server.store.save("")
+            store = self.server.flowers if path.startswith("/api/flowers") else self.server.store
+            if path.endswith("/clear"):
+                state = store.save("")
             else:
-                state = self.server.store.save(*validate(payload))
+                state = store.save(*validate(payload))
             self.respond(200, state)
         except (json.JSONDecodeError, UnicodeDecodeError):
             self.respond(400, {"error": "Invalid JSON request."})

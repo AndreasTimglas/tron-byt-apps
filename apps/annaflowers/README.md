@@ -1,28 +1,26 @@
 # Anna Flowers
 
-A 64×32 greeting with the exact text:
+Write a message at http://tidbyt-pi.local:8787/flowers and send it to scroll
+inside the existing flower border. The composer has its own messages,
+independent of Message Board, with color and expiry choices.
 
-> Anna, Anna, vad gör man en söndagmorgon
+Update the Pi service using the [installation guide](../../services/messageboard/README.md).
+In Tronbyt Manager refresh your custom repository, configure Anna Flowers'
+**Message server** as http://192.168.0.127:8787 (your Pi's actual IP),
+and set render interval to **1 minute**, display duration to **15 seconds**.
+Leave Message server empty to keep the original fixed Anna greeting.
 
-The sentence scrolls in white `tb-8` text, preserving the Swedish ö, inside
-a pink, purple, and peach flower border. The original pixel flowers have
-rounded upright blossoms and paired side petals with an intentionally cheeky,
-suggestive silhouette. The border occupies all four sides; the text has its
-own 46-pixel-wide central strip.
+Messages allow up to 120 characters including Swedish letters. Short text is
+centered; longer text scrolls continuously, without pagination. Long messages
+scroll faster so the complete loop fits within 14 seconds.
+The browser preview uses the same glyphs, border, scroll coordinates and speed.
 
-No settings, network calls, API keys, or external images are needed.
+Send starts the chosen expiry timer. Clear or expiry skips the configured app
+on the next render. Updates appear at the next render and normal app rotation.
+HTTP/data errors skip the app; transport errors remain host-handled.
 
-```sh
+~~~sh
 pixlet check apps/annaflowers/annaflowers.star
 pixlet render apps/annaflowers/annaflowers.star
 pixlet serve apps/annaflowers/annaflowers.star
-```
-
-Set the app's display duration to at least **14 seconds** in Tronbyt Manager
-to read the complete sentence. The scroll uses a 60 ms frame delay and fits
-within the standard 15-second render limit. Daily rendering is recommended
-in the manifest because the content is static; this is separate from how long
-the app stays on screen.
-
-Validated with Pixlet v0.54.0: compatibility check, rendered border/text layout,
-and complete animation duration.
+~~~
