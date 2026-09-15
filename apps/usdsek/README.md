@@ -22,7 +22,7 @@ percentage, using the same five-pixel margins.
 The rate has two decimal places; percentage change
 has one decimal place and an explicit sign. `7D` labels the comparison.
 The chart occupies the bottom 16 rows and all 64 columns. A dim dotted line marks the starting rate, without a full grid or
-axes; its white endpoint marks the latest available observation.
+axes; its endpoint marks the latest available observation.
 
 ## Data source and refresh
 
@@ -60,8 +60,9 @@ change_percent = (latest_rate / oldest_rate - 1) * 100
 ```
 
 The calculation uses the original rates before display rounding. Positive
-means one USD buys more SEK. The percentage is green for a gain, red for a
-loss, and neutral gray for exactly no change. Color uses the unrounded change. Rounded tiny negative changes can show `-0.0%`.
+means one USD buys more SEK. All text and the chart line (including its endpoint) are green for a gain, red
+for a loss, and neutral gray for exactly no change. The dim reference line stays
+neutral. Color uses the unrounded change. Rounded tiny negative changes can show `-0.0%`.
 
 The chart computes `data_min`, `data_max`, their midpoint, and observed span:
 

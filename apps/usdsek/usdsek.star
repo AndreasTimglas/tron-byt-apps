@@ -57,7 +57,7 @@ def fixed(value, places):
 def percent_change(oldest, latest):
     return (latest / oldest - 1) * 100
 
-def chart(points):
+def chart(points, color):
     low, high = chart_bounds([point[1] for point in points])
     coords = [(int(day * 63 / (PERIOD_DAYS - 1)), int((high - rate) * (CHART_HEIGHT - 1) / (high - low) + 0.5)) for day, rate in points]
     children = [render.Box(width = 64, height = CHART_HEIGHT)]
@@ -76,13 +76,13 @@ def chart(points):
             x2 = coords[i][0],
             y2 = coords[i][1],
             width = 1,
-            color = "#66ddff",
+            color = color,
             antialias = False,
         )))
 
     # Visible even if there is just one available observation.
     x, y = coords[-1]
-    children.append(render.Padding(pad = (x, y, 0, 0), child = render.Box(width = 1, height = 1, color = "#ffffff")))
+    children.append(render.Padding(pad = (x, y, 0, 0), child = render.Box(width = 1, height = 1, color = color)))
     return render.Stack(children = children)
 
 def screen(points, stale = False):
@@ -94,14 +94,14 @@ def screen(points, stale = False):
     label = ("-" if change < 0 else "+") + fixed(change, 1) + "%"
     return render.Root(child = render.Column(cross_align = "center", children = [
         render.Padding(pad = (5, 0, 5, 0), child = render.Row(expanded = True, main_align = "space_between", children = [
-            render.Text("USD>SEK" + ("*" if stale else ""), font = "tom-thumb", height = 6, color = "#66ddff"),
-            render.Text("7D", font = "tom-thumb", height = 6, color = "#66ddff"),
+            render.Text("USD>SEK" + ("*" if stale else ""), font = "tom-thumb", height = 6, color = change_color),
+            render.Text("7D", font = "tom-thumb", height = 6, color = change_color),
         ])),
         render.Padding(pad = (5, 0, 5, 0), child = render.Row(expanded = True, main_align = "space_between", cross_align = "center", children = [
-            render.Text(fixed(latest, 2), font = "6x10", height = 10),
+            render.Text(fixed(latest, 2), font = "6x10", height = 10, color = change_color),
             render.Text(label, font = "tom-thumb", height = 6, color = change_color),
         ])),
-        chart(points),
+        chart(points, change_color),
     ]))
 
 # Fixed currency pair; Pixlet still requires the config argument.
