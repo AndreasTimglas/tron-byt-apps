@@ -1,0 +1,14 @@
+---
+id: annaflowers
+name: Anna Flowers
+summary: A cheeky floral greeting
+desc: Anna, Anna, vad gör man en söndagmorgon scrolls inside a colorful border of playfully suggestive pixel flowers.
+author: andreastimglas
+fileName: annaflowers.star
+packageName: annaflowers
+recommendedInterval: 1440
+category: entertainment
+tags:
+  - art
+  - humor
+minPixletVersion: v0.54.0
