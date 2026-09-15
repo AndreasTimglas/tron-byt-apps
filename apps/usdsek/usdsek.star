@@ -94,8 +94,8 @@ def screen(points, stale = False):
     label = ("-" if change < 0 else "+") + fixed(change, 1) + "%"
     return render.Root(child = render.Column(cross_align = "center", children = [
         render.Padding(pad = (5, 0, 5, 0), child = render.Row(expanded = True, main_align = "space_between", children = [
-            render.Text("USD>SEK" + ("*" if stale else ""), font = "tom-thumb", height = 6, color = change_color),
-            render.Text("7D", font = "tom-thumb", height = 6, color = change_color),
+            render.Text("USD>SEK" + ("*" if stale else ""), font = "tom-thumb", height = 6, color = "#ffffff"),
+            render.Text("7D", font = "tom-thumb", height = 6, color = "#ffffff"),
         ])),
         render.Padding(pad = (5, 0, 5, 0), child = render.Row(expanded = True, main_align = "space_between", cross_align = "center", children = [
             render.Text(fixed(latest, 2), font = "6x10", height = 10, color = change_color),

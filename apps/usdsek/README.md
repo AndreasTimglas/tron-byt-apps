@@ -60,7 +60,8 @@ change_percent = (latest_rate / oldest_rate - 1) * 100
 ```
 
 The calculation uses the original rates before display rounding. Positive
-means one USD buys more SEK. All text and the chart line (including its endpoint) are green for a gain, red
+means one USD buys more SEK. The USD>SEK and 7D headings are always white. The exchange rate, percentage
+and chart line (including its endpoint) are green for a gain, red
 for a loss, and neutral gray for exactly no change. The dim reference line stays
 neutral. Color uses the unrounded change. Rounded tiny negative changes can show `-0.0%`.
 
