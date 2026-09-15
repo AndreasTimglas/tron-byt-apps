@@ -56,7 +56,32 @@ state boundaries. Source data:
 - [110m state boundary GeoJSON](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_admin_1_states_provinces_lines.geojson)
 
 The static map includes coastline and state boundaries without dense road or
-city labels. It requires no background-map requests at runtime.
+city labels. Ocean is dark blue; land below 200 m is muted green, 200–400 m
+foothills olive, 400–800 m highlands brown, and terrain above 800 m lighter brown.
+These generalized elevation bands are background geography, not rain intensity.
+Precipitation retains the brighter forecast palette above the terrain.
+
+Elevation shading uses [Mapzen/Tilezen Terrain Tiles](https://registry.opendata.aws/terrain-tiles/),
+accessed September 15, 2026, via the free Terrarium endpoint:
+`https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png`.
+The map samples zoom 6 tiles x=18–19, y=23–24 and decodes height in meters as
+`R*256 + G + B/256 - 32768`. Heights are sampled at display-pixel centers;
+this is a regional illustration, not a detailed topographic map.
+
+Terrain data courtesy of the U.S. Geological Survey (3DEP, GMTED2010, SRTM)
+and NOAA (ETOPO1), distributed by Mapzen/Tilezen. U.S. government source data
+are public domain in the United States. The coloring and sampling are our
+modifications, without agency endorsement. See the [source attribution](https://github.com/tilezen/joerd/blob/master/docs/attribution.md).
+
+To regenerate the background, download the two Natural Earth files above and
+the four Terrarium tiles (named `6-18-23.png`, `6-19-23.png`, `6-18-24.png`,
+`6-19-24.png`), then use Python with Pillow:
+
+```sh
+python apps/morrisrain/tools/build_basemap.py land.geojson states.geojson terrain_dir apps/morrisrain/basemap.png
+```
+
+Elevation tiles are only needed when rebuilding the bundled background. It requires no background-map requests at runtime.
 
 ## Time and refresh
 
