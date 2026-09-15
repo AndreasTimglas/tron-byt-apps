@@ -1,7 +1,7 @@
 # Message Board for iPhone and Tronbyt
 
 A small web page on your Raspberry Pi: write a message in Safari, choose its
-color and optional expiry, then tap **Send to display**. The companion Pixlet
+color, then tap **Send to display**. The companion Pixlet
 app displays it on its next scheduled render.
 
 ## Install on the Pi
@@ -49,7 +49,7 @@ A successful Send means the Pi saved the message; it is not a delivery
 acknowledgement from the LED matrix. The message appears on the next render
 and app rotation. This service does not interrupt or pin the app, and needs no
 Tronbyt credentials. Expiry and Clear also take effect on the next render.
-When no message is active, the display app shows **NO MESSAGE**.
+When no message is active, Tronbyt skips the app. Leave it enabled so it keeps checking for new messages.
 
 ## Features
 
@@ -57,7 +57,9 @@ When no message is active, the display app shows **NO MESSAGE**.
 - Latin-1 text including Swedish å, ä, ö. Smart quotes/dashes from the iPhone
   keyboard are converted to their simple equivalents. Emoji are rejected with
   a helpful message because the display font cannot reliably show them.
-- Expiry after 15 minutes, 1 hour, 4 hours, 24 hours, or no expiry.
+- Every Send starts a one-hour rotation window. Sending again resets the hour.
+- After expiry or Clear, the app is skipped on the next render (within about one minute).
+- Restarting the service does not restart the hour; older saved messages are also capped at one hour.
 - Clear removes the saved message. Sending another message replaces it.
 - The phone preview is illustrative; Pixlet uses measured text widths to split
   the actual message into up to three lines per page, without scrolling.
@@ -121,7 +123,7 @@ pixlet check apps/messageboard/messageboard.star
 pixlet render apps/messageboard/messageboard.star server=http://127.0.0.1:8787
 ~~~
 
-Validated: eight backend tests covering persistence, expiry, normalization,
+Validated: nine backend tests covering persistence, one-hour expiry and replacement, normalization,
 invalid input, failed saves, request protections and file routing; JavaScript
 syntax and Compose configuration; browser send/color/expiry/clear at desktop
 and iPhone-sized viewports; Pixlet live API rendering and pagination of long

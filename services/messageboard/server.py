@@ -25,12 +25,13 @@ def validate(payload):
     if any(not (32 <= ord(c) <= 126 or 160 <= ord(c) <= 255) for c in text):
         raise ValueError("Use letters, numbers and simple punctuation. Swedish letters are supported; emoji are not.")
     color = payload.get("color", "white")
-    minutes = payload.get("expires_minutes", 0)
+    minutes = payload.get("expires_minutes", 60)
     if not isinstance(color, str) or color not in COLORS:
         raise ValueError("Choose a listed color.")
     if type(minutes) is not int or minutes not in EXPIRIES:
         raise ValueError("Choose a listed expiry time.")
-    return text, color, minutes
+    # Accept expiry values from older clients, but every new send lasts one hour.
+    return text, color, 60
 
 
 class Store:
@@ -52,6 +53,10 @@ class Store:
     def read(self):
         with self.lock:
             state = self.state.copy()
+        updated = state.get("updated_at")
+        if state["text"]:
+            deadline = updated + 3600 if type(updated) in (int, float) else 0
+            state["expires_at"] = min(state["expires_at"], deadline) if state["expires_at"] is not None else deadline
         expired = state.get("expires_at") is not None and time.time() >= state["expires_at"]
         if expired:
             state["text"] = ""
@@ -60,7 +65,7 @@ class Store:
         state["display_color"] = COLORS[state["color"]]
         return state
 
-    def save(self, text, color="white", minutes=0):
+    def save(self, text, color="white", minutes=60):
         now = int(time.time())
         state = {"text": text, "color": color, "updated_at": now, "expires_at": now + minutes * 60 if minutes else None}
         with self.lock:

@@ -39,10 +39,10 @@ def message_screen(data):
         return status("NO SERVER")
     expires = data.get("expires_at")
     if expires != None and (type(expires) not in ["int", "float"] or expires <= time.now().unix):
-        return status("NO MESSAGE")
+        return []
     text = data["text"][:120].strip()
     if not text:
-        return status("NO MESSAGE")
+        return []
     color = data.get("display_color")
     if color not in COLORS:
         color = "#ffffff"

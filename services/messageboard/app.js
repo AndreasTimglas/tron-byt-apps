@@ -42,7 +42,7 @@ async function send(clear=false) {
  if(busy) return;
  busy=true;$("send").disabled=true;$("clear").disabled=true;feedback(clear?"Clearing…":"Saving your message…");
  try{
-  const data=await request(clear?"/api/clear":"/api/message",clear?{}:{text:normalized(),color:document.querySelector('input[name="color"]:checked').value,expires_minutes:Number($("expiry").value)});
+  const data=await request(clear?"/api/clear":"/api/message",clear?{}:{text:normalized(),color:document.querySelector('input[name="color"]:checked').value,expires_minutes:60});
   showSaved(data);
   feedback(clear?"Cleared. The display will update on its next refresh.":"Saved! Your message will appear on the next display refresh.");
  }catch(error){feedback(error.name==="AbortError"?"The request timed out. Check Currently saved before trying again.":error.message||"Could not connect. Please try again.",true);}

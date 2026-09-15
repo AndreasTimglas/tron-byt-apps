@@ -19,7 +19,7 @@
 <label class="swatch yellow"><input type="radio" name="color" value="yellow"><span>Yellow</span></label>
 <label class="swatch pink"><input type="radio" name="color" value="pink"><span>Pink</span></label>
 </div></fieldset>
-<label for="expiry">Keep the message for</label><select id="expiry"><option value="0">Until I clear it</option><option value="15">15 minutes</option><option value="60">1 hour</option><option value="240">4 hours</option><option value="1440">24 hours</option></select>
+<p class="hint">Each message joins the rotation for one hour. Sending again restarts the hour; Clear removes it early.</p>
 <button id="send" class="primary" type="submit" disabled>Send to display <span aria-hidden="true">↗</span></button>
 <p class="hint">Updates on the next display refresh, usually within a minute.</p><p id="feedback" role="status" aria-live="polite"></p>
 </form></section>

@@ -56,6 +56,20 @@ class BoardTests(unittest.TestCase):
             self.assertTrue(state["expired"])
             self.assertEqual(state["text"], "")
 
+    def test_one_hour_rotation_window_and_replacement(self):
+        with patch("server.time.time", return_value=1000):
+            code, body = self.request("POST", "/api/message", {"text": "First", "expires_minutes": 0})
+            self.assertEqual(code, 200)
+            self.assertEqual(json.loads(body)["expires_at"], 4600)
+        with patch("server.time.time", return_value=4599):
+            self.assertTrue(Store(self.path).read()["active"])
+        with patch("server.time.time", return_value=4600):
+            self.assertFalse(Store(self.path).read()["active"])
+            self.request("POST", "/api/message", {"text": "Second"})
+            self.assertEqual(self.store.read()["expires_at"], 8200)
+        with patch("server.time.time", return_value=8200):
+            self.assertFalse(self.store.read()["active"])
+
     def test_smart_punctuation_and_composed_unicode(self):
         text, _, _ = validate({"text": "  There’s a gift…  Malmo\u0308 "})
         self.assertEqual(text, "There's a gift... Malmö")

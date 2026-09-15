@@ -18,7 +18,7 @@ characters. Pages advance every three seconds, or slightly faster when needed
 to keep the entire message under Pixlet's 15-second animation limit.
 
 There is no HTTP caching. Clear, replacements, and expiry take effect on the
-next host render. Empty/expired messages show NO MESSAGE. A missing server URL
+next host render. Empty/expired messages return no content, so Tronbyt skips this app. A missing server URL
 shows SET URL. HTTP/data errors show NO SERVER. The root includes a maximum-age
 hint of 60 seconds (or remaining expiry, if sooner); device enforcement varies.
 Transport errors remain host-handled because Pixlet has no supported catch API.
