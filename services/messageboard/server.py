@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 COLORS = {"white": "#ffffff", "green": "#66ff66", "yellow": "#ffdd66", "pink": "#ff88bb"}
-EXPIRIES = {0, 15, 60, 240, 1440}
+EXPIRIES = {5, 15, 30, 60, 180, 360, 1440}
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
 
 
@@ -30,8 +30,7 @@ def validate(payload):
         raise ValueError("Choose a listed color.")
     if type(minutes) is not int or minutes not in EXPIRIES:
         raise ValueError("Choose a listed expiry time.")
-    # Accept expiry values from older clients, but every new send lasts one hour.
-    return text, color, 60
+    return text, color, minutes
 
 
 class Store:
@@ -54,9 +53,9 @@ class Store:
         with self.lock:
             state = self.state.copy()
         updated = state.get("updated_at")
-        if state["text"]:
+        if state["text"] and state["expires_at"] is None:
             deadline = updated + 3600 if type(updated) in (int, float) else 0
-            state["expires_at"] = min(state["expires_at"], deadline) if state["expires_at"] is not None else deadline
+            state["expires_at"] = deadline
         expired = state.get("expires_at") is not None and time.time() >= state["expires_at"]
         if expired:
             state["text"] = ""

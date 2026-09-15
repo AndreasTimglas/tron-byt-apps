@@ -58,7 +58,7 @@ class BoardTests(unittest.TestCase):
 
     def test_one_hour_rotation_window_and_replacement(self):
         with patch("server.time.time", return_value=1000):
-            code, body = self.request("POST", "/api/message", {"text": "First", "expires_minutes": 0})
+            code, body = self.request("POST", "/api/message", {"text": "First"})
             self.assertEqual(code, 200)
             self.assertEqual(json.loads(body)["expires_at"], 4600)
         with patch("server.time.time", return_value=4599):
@@ -69,6 +69,21 @@ class BoardTests(unittest.TestCase):
             self.assertEqual(self.store.read()["expires_at"], 8200)
         with patch("server.time.time", return_value=8200):
             self.assertFalse(self.store.read()["active"])
+
+    def test_all_time_limits_survive_restart_and_expire(self):
+        for minutes in [5, 15, 30, 60, 180, 360, 1440]:
+            with self.subTest(minutes=minutes):
+                with patch("server.time.time", return_value=1000):
+                    code, body = self.request("POST", "/api/message", {"text": "Timed", "expires_minutes": minutes})
+                    self.assertEqual(code, 200)
+                    deadline = 1000 + minutes * 60
+                    self.assertEqual(json.loads(body)["expires_at"], deadline)
+                with patch("server.time.time", return_value=deadline - 1):
+                    self.assertTrue(Store(self.path).read()["active"])
+                with patch("server.time.time", return_value=deadline):
+                    self.assertFalse(Store(self.path).read()["active"])
+        for minutes in [0, 240, -1, 60.0, "60", None]:
+            self.assertEqual(self.request("POST", "/api/message", {"text": "Invalid", "expires_minutes": minutes})[0], 400)
 
     def test_smart_punctuation_and_composed_unicode(self):
         text, _, _ = validate({"text": "  There’s a gift…  Malmo\u0308 "})
