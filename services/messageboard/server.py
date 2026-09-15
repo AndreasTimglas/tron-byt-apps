@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 COLORS = {"white": "#ffffff", "green": "#66ff66", "yellow": "#ffdd66", "pink": "#ff88bb"}
 EXPIRIES = {5, 15, 30, 60, 180, 360, 1440}
-STATIC = {"/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
+STATIC = {"/font.js": ("font.js", "text/javascript; charset=utf-8"), "/layout.js": ("layout.js", "text/javascript; charset=utf-8"), "/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
 
 
 def validate(payload):

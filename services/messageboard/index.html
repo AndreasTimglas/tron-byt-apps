@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f3ed"><meta name="apple-mobile-web-app-capable" content="yes">
-<title>Little messages · Tronbyt</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+<title>Little messages · Tronbyt</title><link rel="stylesheet" href="/style.css"><script src="/font.js" defer></script><script src="/layout.js" defer></script><script src="/app.js" defer></script>
 </head>
 <body><main>
 <header><a class="brand" href="/"><span class="brand-icon">✳</span> THE MESSAGE BOARD</a><span id="connection" class="connection">Connecting…</span></header>
@@ -26,7 +26,7 @@
 <p class="hint">Updates on the next display refresh, usually within a minute.</p><p id="feedback" role="status" aria-live="polite"></p>
 </form></section>
 <aside>
-<section class="preview-card"><div class="preview-heading"><span>YOUR NOTE</span><span>PREVIEW</span></div><div class="led-display"><p id="preview">A little hello<br>goes a long way.</p></div><p class="preview-hint">Long messages appear over several pages.</p></section>
+<section class="preview-card"><div class="preview-heading"><span>YOUR NOTE</span><span>PREVIEW</span></div><div id="preview-pages"></div><p id="page-count" class="preview-hint" role="status"></p><p class="preview-hint">One page fits 3 lines of 60 pixels. Character capacity varies with letter widths and word breaks. The preview shows the exact 64 × 32 pixel layout; the total limit is 120 characters.</p></section>
 <section class="saved card"><div class="saved-title"><h2>Currently saved</h2><span id="active-indicator" class="dot"></span></div><p id="saved-message">Loading your message…</p><p id="saved-info" class="hint"></p><button id="clear" type="button" class="secondary" disabled>Clear the display</button></section>
 <p class="home-note">Made for your home Wi-Fi.<br>In Safari, use Share → Add to Home Screen.</p>
 </aside></div><footer>Small messages, shared moments.</footer>

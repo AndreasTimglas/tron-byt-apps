@@ -9,11 +9,39 @@ function feedback(message,error=false) { $("feedback").textContent=message; $("f
 function draft() {
  const text=normalized();
  $("counter").textContent=text.length+" / 120";
- $("preview").textContent=text||"A little hello\ngoes a long way.";
- $("preview").style.color=palette[document.querySelector('input[name="color"]:checked').value];
+ renderPreview(text);
  $("send").disabled=busy||!valid(text);
  if(text&&!valid(text)) feedback("Use letters, numbers and simple punctuation. Swedish letters work; emoji do not.",true);
  else if(!busy) feedback("");
+}
+function renderPreview(text) {
+ const container = $("preview-pages");
+ container.replaceChildren();
+ if (text && !valid(text)) {
+  $("page-count").textContent = "Correct the unsupported characters to preview your message.";
+  return;
+ }
+ const lines = boardLines(text);
+ const total = Math.max(1, Math.ceil(lines.length / 3));
+ const color = palette[document.querySelector('input[name="color"]:checked').value];
+ for (let page=0;page<total;page++) {
+  const canvas = document.createElement("canvas");
+  canvas.width=64; canvas.height=32; canvas.className="pixel-preview";
+  const pageLines=lines.slice(page*3,page*3+3);
+  canvas.setAttribute("role","img");
+  canvas.setAttribute("aria-label","Page "+(page+1)+": "+pageLines.join(" / "));
+  const ctx=canvas.getContext("2d");
+  ctx.fillStyle="#000000";ctx.fillRect(0,0,64,32);
+  for (const [x,y,active] of boardPixels(pageLines,page,total)) {
+   ctx.fillStyle=active?color:"#222222";ctx.fillRect(x,y,1,1);
+  }
+  const label=document.createElement("p");
+  label.className="preview-hint";label.textContent="Page "+(page+1)+" of "+total;
+  container.append(canvas,label);
+ }
+ $("page-count").textContent = !text ? "Write a message to check its fit." :
+  total===1 ? "Fits on one page · "+lines.length+" of 3 lines used." :
+  total+" pages · "+lines.length+" lines. Shorten to 3 lines to keep it on one page.";
 }
 function showSaved(data) {
  lastSaved=data;

@@ -62,8 +62,8 @@ When no message is active, Tronbyt skips the app. Leave it enabled so it keeps c
 - After expiry or Clear, the app is skipped on the next render (within about one minute).
 - Restarting the service preserves the expiry time. Legacy messages without an expiry are capped at one hour.
 - Clear removes the saved message. Sending another message replaces it.
-- The phone preview is illustrative; Pixlet uses measured text widths to split
-  the actual message into up to three lines per page, without scrolling.
+- The phone preview uses the same tb-8 pixel glyphs, wrapping, left alignment,
+  margins and page indicators as Pixlet. Every page is shown before sending.
 - Saved data survives service/Pi restarts in the Docker volume.
 - There is no email, SMS provider, API key, account, or subscription.
 
@@ -133,3 +133,19 @@ words and Swedish text.
 The Docker daemon was unavailable on the development Mac, so the container
 build/run still needs to happen on the Pi using the installation commands.
 Pi installation was not attempted after SSH authentication was rejected.
+
+### Preview and page capacity
+
+Each page holds three lines of up to 60 pixels, with a two-pixel left margin.
+There is no fixed character cutoff: wide letters and word breaks use more room.
+The editor shows the actual line/page count and all pages so you can shorten
+a message before sending. Total input remains limited to 120 characters.
+Update both the web service and the Message Board app in Tronbyt Manager to
+keep the preview and display aligned.
+
+The preview font is derived from Pixlet’s public-domain tb-8 BDF.
+Pixel parity can be checked with Node, Pillow and Pixlet installed:
+
+~~~sh
+python3 services/messageboard/check_preview.py /path/to/pixlet
+~~~

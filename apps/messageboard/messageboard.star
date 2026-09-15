@@ -25,7 +25,7 @@ def wrap(text):
         if line:
             lines.append(line)
         line = ""
-        for char in word.elems():
+        for char in word.codepoints():
             if render.Text(line + char, font = "tb-8").size()[0] > 60:
                 lines.append(line)
                 line = ""
@@ -40,7 +40,7 @@ def message_screen(data):
     expires = data.get("expires_at")
     if expires != None and (type(expires) not in ["int", "float"] or expires <= time.now().unix):
         return []
-    text = data["text"][:120].strip()
+    text = "".join(list(data["text"].codepoints())[:120]).strip()
     if not text:
         return []
     color = data.get("display_color")
@@ -50,8 +50,8 @@ def message_screen(data):
     pages = []
     total = (len(lines) + 2) // 3
     for index in range(total):
-        children = [render.Box(width = 64, height = 30, child = render.Column(
-            cross_align = "center",
+        children = [render.Padding(pad = (2, 3, 0, 0), child = render.Column(
+            cross_align = "start",
             children = [render.Text(line, font = "tb-8", color = color) for line in lines[index * 3:index * 3 + 3]],
         ))]
         if total > 1:

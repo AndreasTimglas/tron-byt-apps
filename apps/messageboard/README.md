@@ -27,3 +27,19 @@ The service stores up to 120 Latin-1 characters and converts smart punctuation
 from phone keyboards. The display does not show arbitrary HTML or run code
 from messages. No credentials are required. This is a trusted-LAN application,
 not a public messaging endpoint.
+
+### Preview and page capacity
+
+Each page holds three lines of up to 60 pixels, with a two-pixel left margin.
+There is no fixed character cutoff: wide letters and word breaks use more room.
+The editor shows the actual line/page count and all pages so you can shorten
+a message before sending. Total input remains limited to 120 characters.
+Update both the web service and the Message Board app in Tronbyt Manager to
+keep the preview and display aligned.
+
+The preview font is derived from Pixlet’s public-domain tb-8 BDF.
+Pixel parity can be checked with Node, Pillow and Pixlet installed:
+
+~~~sh
+python3 services/messageboard/check_preview.py /path/to/pixlet
+~~~
