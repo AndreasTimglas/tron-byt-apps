@@ -60,7 +60,8 @@ change_percent = (latest_rate / oldest_rate - 1) * 100
 ```
 
 The calculation uses the original rates before display rounding. Positive
-means one USD buys more SEK. Rounded tiny negative changes can show `-0.0%`.
+means one USD buys more SEK. The percentage is green for a gain, red for a
+loss, and neutral gray for exactly no change. Color uses the unrounded change. Rounded tiny negative changes can show `-0.0%`.
 
 The chart computes `data_min`, `data_max`, their midpoint, and observed span:
 
@@ -78,7 +79,7 @@ Non-200 HTTP responses, malformed JSON, empty data, and invalid rate rows are
 handled. Pixlet's normal `cache.star` stores a successful response for up to
 seven days. Fresh entries avoid another request for six hours. On an HTTP/data
 failure, usable cached observations still within the current 7-day window
-are shown with an asterisk (`USD>SEK*`) and an amber change label. Without usable
+are shown with an asterisk (`USD>SEK*`) while retaining the directional change color. Without usable
 cached data, a compact `USD>SEK / NO DATA` screen is displayed. Cache persistence
 depends on the host; independent CLI runs need not share a persistent cache.
 

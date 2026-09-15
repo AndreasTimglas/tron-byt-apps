@@ -90,6 +90,7 @@ def screen(points, stale = False):
         return error_screen()
     latest = points[-1][1]
     change = percent_change(points[0][1], latest)
+    change_color = "#66ff66" if change > 0 else "#ff5555" if change < 0 else "#dddddd"
     label = ("-" if change < 0 else "+") + fixed(change, 1) + "%"
     return render.Root(child = render.Column(cross_align = "center", children = [
         render.Padding(pad = (5, 0, 5, 0), child = render.Row(expanded = True, main_align = "space_between", children = [
@@ -98,7 +99,7 @@ def screen(points, stale = False):
         ])),
         render.Padding(pad = (5, 0, 5, 0), child = render.Row(expanded = True, main_align = "space_between", cross_align = "center", children = [
             render.Text(fixed(latest, 2), font = "6x10", height = 10),
-            render.Text(label, font = "tom-thumb", height = 6, color = "#ffbb66" if stale else "#dddddd"),
+            render.Text(label, font = "tom-thumb", height = 6, color = change_color),
         ])),
         chart(points),
     ]))
