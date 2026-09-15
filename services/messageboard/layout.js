@@ -20,7 +20,7 @@ function boardLines(text) {
 function boardPixels(lines, page, total) {
  const pixels = [];
  lines.forEach((line, row) => {
-  let x = 2;
+  let x = 32 - Math.floor(boardWidth(line) / 2);
   for (const char of line) {
    const glyph = boardFont[char];
    if (glyph) for (const [gx, gy] of glyph.pixels) {

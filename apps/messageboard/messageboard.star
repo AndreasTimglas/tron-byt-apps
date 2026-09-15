@@ -50,9 +50,9 @@ def message_screen(data):
     pages = []
     total = (len(lines) + 2) // 3
     for index in range(total):
-        children = [render.Padding(pad = (2, 3, 0, 0), child = render.Column(
+        children = [render.Padding(pad = (0, 3, 0, 0), child = render.Column(
             cross_align = "start",
-            children = [render.Text(line, font = "tb-8", color = color) for line in lines[index * 3:index * 3 + 3]],
+            children = [render.Box(width = 64, height = 8, child = render.Text(line, font = "tb-8", color = color)) for line in lines[index * 3:index * 3 + 3]],
         ))]
         if total > 1:
             children.append(render.Padding(pad = (2, 31, 0, 0), child = render.Row(children = [

@@ -30,7 +30,7 @@ not a public messaging endpoint.
 
 ### Preview and page capacity
 
-Each page holds three lines of up to 60 pixels, with a two-pixel left margin.
+Each page holds three lines of up to 60 pixels, with each line centered horizontally.
 There is no fixed character cutoff: wide letters and word breaks use more room.
 The editor shows the actual line/page count and all pages so you can shorten
 a message before sending. Total input remains limited to 120 characters.

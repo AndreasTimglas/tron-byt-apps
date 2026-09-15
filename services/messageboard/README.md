@@ -62,7 +62,7 @@ When no message is active, Tronbyt skips the app. Leave it enabled so it keeps c
 - After expiry or Clear, the app is skipped on the next render (within about one minute).
 - Restarting the service preserves the expiry time. Legacy messages without an expiry are capped at one hour.
 - Clear removes the saved message. Sending another message replaces it.
-- The phone preview uses the same tb-8 pixel glyphs, wrapping, left alignment,
+- The phone preview uses the same tb-8 pixel glyphs, wrapping, centered alignment,
   margins and page indicators as Pixlet. Every page is shown before sending.
 - Saved data survives service/Pi restarts in the Docker volume.
 - There is no email, SMS provider, API key, account, or subscription.
@@ -136,7 +136,7 @@ Pi installation was not attempted after SSH authentication was rejected.
 
 ### Preview and page capacity
 
-Each page holds three lines of up to 60 pixels, with a two-pixel left margin.
+Each page holds three lines of up to 60 pixels, with each line centered horizontally.
 There is no fixed character cutoff: wide letters and word breaks use more room.
 The editor shows the actual line/page count and all pages so you can shorten
 a message before sending. Total input remains limited to 120 characters.
