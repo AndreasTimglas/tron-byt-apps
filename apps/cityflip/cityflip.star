@@ -31,7 +31,7 @@ def clock_screen(city, hour, minute):
         placed(2, 16, render.Box(width = 1, height = 1, color = "#aaaaaa")),
     ])
     return render.Root(max_age = 90, child = render.Column(cross_align = "center", children = [
-        render.Box(width = 64, height = 8, child = render.Text(city, font = "tb-8", color = "#bbbbbb")),
+        render.Box(width = 64, height = 8, child = render.Text(city, font = "tb-8", color = "#66ff66")),
         render.Row(children = [
             card(digits[0]),
             render.Box(width = 1, height = 1),
