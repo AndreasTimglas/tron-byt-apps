@@ -1,0 +1,14 @@
+---
+id: morrisrain
+name: Morris Rain
+summary: Morristown 3-hour rain map
+desc: Animated NOAA HRRR simulated radar forecast around Morristown, NJ. A map with a center marker and precipitation intensity colors, covering the next three hours.
+author: andreastimglas
+fileName: morrisrain.star
+packageName: morrisrain
+recommendedInterval: 10
+category: weather
+tags:
+  - weather
+  - radar
+minPixletVersion: v0.54.0
