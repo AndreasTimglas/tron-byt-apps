@@ -10,6 +10,7 @@ import unicodedata
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
+from scheduling import save_schedule
 
 COLORS = {"white": "#ffffff", "green": "#66ff66", "yellow": "#ffdd66", "pink": "#ff88bb"}
 EXPIRIES = {5, 15, 30, 60, 180, 360, 1440}
@@ -52,6 +53,13 @@ class Store:
     def read(self):
         with self.lock:
             state = self.state.copy()
+        now = time.time()
+        schedules = [item for item in state.pop("schedules", []) if item["expires_at"] > now]
+        active = next((item for item in schedules if item["starts_at"] <= now), None)
+        if active:
+            state.update(active)
+        state["schedules"] = schedules
+        state["scheduled"] = active is not None
         updated = state.get("updated_at")
         if state["text"] and state["expires_at"] is None:
             deadline = updated + 3600 if type(updated) in (int, float) else 0
@@ -64,21 +72,57 @@ class Store:
         state["display_color"] = COLORS[state["color"]]
         return state
 
+    def _write(self, state):
+        # Caller holds the lock. Replace memory only after durable file replacement.
+        fd, name = tempfile.mkstemp(dir=self.path.parent, prefix=".message-")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as file:
+                json.dump(state, file, ensure_ascii=False)
+                file.flush()
+                os.fsync(file.fileno())
+            os.replace(name, self.path)
+            self.state = state
+        finally:
+            if os.path.exists(name):
+                os.unlink(name)
+
     def save(self, text, color="white", minutes=60):
         now = int(time.time())
-        state = {"text": text, "color": color, "updated_at": now, "expires_at": now + minutes * 60 if minutes else None}
         with self.lock:
-            fd, name = tempfile.mkstemp(dir=self.path.parent, prefix=".message-")
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as file:
-                    json.dump(state, file, ensure_ascii=False)
-                    file.flush()
-                    os.fsync(file.fileno())
-                os.replace(name, self.path)
-                self.state = state
-            finally:
-                if os.path.exists(name):
-                    os.unlink(name)
+            schedules = [item for item in self.state.get("schedules", []) if item["expires_at"] > now]
+            if text and any(item["starts_at"] <= now for item in schedules):
+                raise ValueError("A scheduled message is active. Cancel it before sending now.")
+            if not text:
+                # Clear ends what is showing but preserves future plans.
+                schedules = [item for item in schedules if item["starts_at"] > now]
+            state = {"text": text, "color": color, "updated_at": now,
+                     "expires_at": now + minutes * 60 if minutes else None, "schedules": schedules}
+            if text and schedules:
+                state["expires_at"] = min(state["expires_at"], min(item["starts_at"] for item in schedules))
+            self._write(state)
+        return self.read()
+
+    def schedule(self, payload):
+        text, color, _ = validate(payload)
+        now = int(time.time())
+        with self.lock:
+            state = self.state.copy()
+            state["schedules"] = save_schedule(state.get("schedules", []), payload, text, color, now)
+            # Scheduling interrupts a "show now" message at the next scheduled start,
+            # so the old message cannot unexpectedly reappear after the window ends.
+            start = state["schedules"][0]["starts_at"]
+            if state.get("expires_at") is not None:
+                state["expires_at"] = min(state["expires_at"], start)
+            self._write(state)
+        return self.read()
+
+    def cancel(self, payload):
+        if not isinstance(payload, dict) or not isinstance(payload.get("id"), str):
+            raise ValueError("Choose a schedule to cancel.")
+        with self.lock:
+            state = self.state.copy()
+            state["schedules"] = [item for item in state.get("schedules", []) if item["id"] != payload["id"]]
+            self._write(state)
         return self.read()
 
 
@@ -150,7 +194,7 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(415, {"error": "Expected JSON"})
             return
         path = urlsplit(self.path).path
-        if path not in ("/api/message", "/api/clear", "/api/flowers", "/api/flowers/clear"):
+        if path not in ("/api/message", "/api/clear", "/api/flowers", "/api/flowers/clear", "/api/message/schedule", "/api/message/cancel", "/api/flowers/schedule", "/api/flowers/cancel"):
             self.respond(404, {"error": "Not found"})
             return
         try:
@@ -160,7 +204,11 @@ class Handler(BaseHTTPRequestHandler):
                 return
             payload = json.loads(self.rfile.read(size))
             store = self.server.flowers if path.startswith("/api/flowers") else self.server.store
-            if path.endswith("/clear"):
+            if path.endswith("/schedule"):
+                state = store.schedule(payload)
+            elif path.endswith("/cancel"):
+                state = store.cancel(payload)
+            elif path.endswith("/clear"):
                 state = store.save("")
             else:
                 state = store.save(*validate(payload))

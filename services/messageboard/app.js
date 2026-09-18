@@ -7,6 +7,14 @@ const clearEndpoint = flowerMode ? "/api/flowers/clear" : "/api/clear";
 let previewTimer = null;
 let busy = false;
 let lastSaved = null;
+let editingId = null;
+const nyFormat = new Intl.DateTimeFormat("en-US", {timeZone:"America/New_York",month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});
+function dateLabel(stamp) { return nyFormat.format(new Date(stamp*1000)); }
+function localInput(stamp) {
+ const parts=new Intl.DateTimeFormat("sv-SE",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(stamp*1000));
+ const values=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+ return values.year+"-"+values.month+"-"+values.day+"T"+values.hour+":"+values.minute;
+}
 function normalized() { return $("message").value.normalize("NFC").replace(/[‘’]/gu,"'").replace(/[“”]/gu,'"').replace(/[–—]/gu,"-").replace(/…/gu,"...").replace(/\s+/gu," ").trim(); }
 function valid(text) { return text.length > 0 && text.length <= 120 && /^[\x20-\x7e\xa0-\xff]+$/u.test(text); }
 function feedback(message,error=false) { $("feedback").textContent=message; $("feedback").className=error?"error":"success"; }
@@ -56,8 +64,46 @@ function showSaved(data) {
  lastSaved=data;
  $("saved-message").textContent=data.active?data.text:data.expired?"Your message has expired.":"The board is clear.";
  $("active-indicator").classList.toggle("active",data.active);
- $("saved-info").textContent=data.active?(data.expires_at?"Expires "+new Date(data.expires_at*1000).toLocaleString([], {hour:"2-digit",minute:"2-digit",month:"short",day:"numeric"}):"Stays until you clear or replace it."):"Send a note whenever you’re ready.";
+ $("saved-info").textContent=data.active?(data.expires_at?"Expires "+dateLabel(data.expires_at):"Stays until you clear or replace it."):"Send a note whenever you’re ready.";
  $("clear").disabled=busy||!data.active;
+ showSchedules(data.schedules||[]);
+}
+function setMode() {
+ const planned=$("mode").value==="schedule";
+ $("schedule-fields").hidden=!planned;
+ $("now-fields").hidden=planned;
+ $("start").required=planned; $("end").required=planned;
+ $("stop-edit").hidden=!editingId;
+ $("send").textContent=planned?(editingId?"Save changes":"Schedule message"):"Send to display";
+}
+function showSchedules(items) {
+ const container=$("schedules");container.replaceChildren();
+ if(!items.length){const p=document.createElement("p");p.className="hint";p.textContent="No upcoming messages.";container.append(p);}
+ for(const item of items){
+  const row=document.createElement("div");row.className="schedule-item";
+  const text=document.createElement("p");text.textContent=item.text;
+  const dates=document.createElement("p");dates.className="hint";dates.textContent=dateLabel(item.starts_at)+" → "+dateLabel(item.expires_at);
+  const edit=document.createElement("button");edit.type="button";edit.className="secondary";edit.textContent="Edit";edit.disabled=busy;
+  edit.addEventListener("click",()=>{
+   if(busy)return;
+   editingId=item.id;$("message").value=item.text;
+   document.querySelector('input[name="color"][value="'+item.color+'"]').checked=true;
+   $("start").value=localInput(item.starts_at);$("end").value=localInput(item.expires_at);
+   $("mode").value="schedule";setMode();draft();$("message").focus();
+  });
+  const cancel=document.createElement("button");cancel.type="button";cancel.className="secondary";cancel.textContent="Cancel";cancel.disabled=busy;
+  cancel.addEventListener("click",()=>cancelSchedule(item.id));
+  row.append(text,dates,edit,cancel);container.append(row);
+ }
+}
+async function cancelSchedule(id) {
+ if(busy)return;busy=true;
+ try{
+  const data=await request(messageEndpoint+"/cancel",{id});
+  if(editingId===id){editingId=null;setMode();}
+  showSaved(data);feedback("Schedule cancelled.");
+ }catch(error){feedback(error.message,true);}
+ finally{busy=false;if(lastSaved)showSaved(lastSaved);}
 }
 async function request(path,payload) {
  const options=payload===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)};
@@ -79,15 +125,23 @@ async function send(clear=false) {
  if(busy) return;
  busy=true;$("send").disabled=true;$("clear").disabled=true;feedback(clear?"Clearing…":"Saving your message…");
  try{
-  const data=await request(clear?clearEndpoint:messageEndpoint,clear?{}:{text:normalized(),color:document.querySelector('input[name="color"]:checked').value,expires_minutes:Number($("expiry").value)});
+  const scheduled=!clear&&$("mode").value==="schedule";
+  const payload=clear?{}:{text:normalized(),color:document.querySelector('input[name="color"]:checked').value,expires_minutes:Number($("expiry").value)};
+  if(scheduled){payload.start=$("start").value;payload.end=$("end").value;if(editingId)payload.id=editingId;}
+  const data=await request(clear?clearEndpoint:scheduled?messageEndpoint+"/schedule":messageEndpoint,payload);
+  if(scheduled){editingId=null;setMode();}
   showSaved(data);
-  feedback(clear?"Cleared. The display will update on its next refresh.":"Saved! Your message will appear on the next display refresh.");
+  feedback(clear?"Cleared. Future schedules are kept.":scheduled?"Scheduled! It will join rotation during the selected window.":"Saved! Your message will appear on the next display refresh.");
  }catch(error){feedback(error.name==="AbortError"?"The request timed out. Check Currently saved before trying again.":error.message||"Could not connect. Please try again.",true);}
- finally{busy=false;$("send").disabled=!valid(normalized());$("clear").disabled=!lastSaved?.active;}
+ finally{busy=false;$("send").disabled=!valid(normalized());if(lastSaved)showSaved(lastSaved);}
 }
 $("composer").addEventListener("submit",event=>{event.preventDefault();if(valid(normalized()))send();});
 $("clear").addEventListener("click",()=>send(true));
 $("message").addEventListener("input",draft);
 document.querySelectorAll('input[name="color"]').forEach(input=>input.addEventListener("change",draft));
 document.querySelectorAll("[data-example]").forEach(button=>button.addEventListener("click",()=>{$("message").value=button.dataset.example;draft();$("message").focus();}));
-draft();refresh();setInterval(refresh,15000);
+$("mode").addEventListener("change",()=>{editingId=null;setMode();});
+$("stop-edit").addEventListener("click",()=>{editingId=null;setMode();feedback("Editing stopped. The saved schedule is unchanged.");});
+const nextHour=Math.ceil(Date.now()/3600000)*3600;
+$("start").value=localInput(nextHour);$("end").value=localInput(nextHour+3600);
+setMode();draft();refresh();setInterval(refresh,15000);

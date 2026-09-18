@@ -163,3 +163,40 @@ keeps its original greeting. With a URL, it shows only active flower messages.
 
 The composer previews the flower border and scrolling pixel text. It supports
 the same colors, 120-character limit, expiry choices and Clear button.
+
+## Schedule messages
+
+Both composers offer **Show now** or **Schedule**. Choose a start date/time
+and end date/time, then save. All scheduling and displayed timestamps use
+**America/New_York**, independent of your phone or Pi timezone. Each schedule
+is one-off; daylight-saving times that do not exist or occur twice are rejected
+with an explanation. Normal dates automatically use EST or EDT.
+
+The scheduled-message list supports editing and cancelling upcoming or active
+windows. Overlapping windows are rejected per app, but Message Board and Anna
+Flowers can each have their own schedules. Up to 100 pending windows per app
+are supported. Adjacent windows (one ends as another starts) are allowed.
+
+The Pi stores windows atomically alongside the current message in its existing
+Docker volume. It selects the active window whenever the display fetches data;
+no open browser, cron task or extra worker is needed. Restarting during a
+window resumes it; restarting after its end never replays it.
+
+A scheduled message replaces any Show now message at its start; the earlier
+message does not resume. Show now is rejected while a scheduled message is
+active: cancel it first to replace it. Clear stops the current message and
+keeps future schedules. Cancelling a schedule removes only that window.
+
+Keep each Tronbyt app enabled with a **1-minute render interval**. Start/end
+changes take effect at the next render and normal rotation; they are not
+second-exact interruptions. These are normal rotation windows, not screen pins.
+
+Additional endpoints (same request protection as Send):
+- POST /api/message/schedule or /api/flowers/schedule:
+  text, color, start and end as YYYY-MM-DDTHH:MM; optional id edits a window.
+- POST /api/message/cancel or /api/flowers/cancel: id.
+- GET on each existing message endpoint includes schedules and scheduled status.
+
+Update the Pi service with git pull --ff-only and docker compose up -d --build,
+then reload the page. No display-app update is required for scheduling.
+The Docker image includes tzdata for New York daylight-saving rules.

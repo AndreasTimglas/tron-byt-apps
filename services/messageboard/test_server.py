@@ -99,6 +99,21 @@ class BoardTests(unittest.TestCase):
         self.assertFalse(self.server.flowers.read()["active"])
         self.assertEqual(self.store.read()["text"], "Board")
 
+    def test_schedule_api_for_both_composers(self):
+        from scheduling import parse_local
+        with patch("server.time.time", return_value=parse_local("2026-09-18T10:00")):
+            for endpoint in ["/api/message", "/api/flowers"]:
+                payload = {"text": "Scheduled Malmö", "start": "2026-09-18T12:00", "end": "2026-09-18T15:00"}
+                code, body = self.request("POST", endpoint + "/schedule", payload)
+                self.assertEqual(code, 200)
+                state = json.loads(body)
+                self.assertFalse(state["active"])
+                ident = state["schedules"][0]["id"]
+                self.assertEqual(self.request("POST", endpoint + "/schedule", {**payload, "id": ident, "text": "Edited"})[0], 200)
+                self.assertEqual(self.request("POST", endpoint + "/schedule", payload)[0], 400)
+                self.assertEqual(self.request("POST", endpoint + "/cancel", {"id": ident})[0], 200)
+                self.assertEqual(json.loads(self.request("GET", endpoint)[1])["schedules"], [])
+
     def test_smart_punctuation_and_composed_unicode(self):
         text, _, _ = validate({"text": "  There’s a gift…  Malmo\u0308 "})
         self.assertEqual(text, "There's a gift... Malmö")

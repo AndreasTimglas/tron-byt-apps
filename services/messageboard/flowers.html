@@ -20,15 +20,20 @@
 <label class="swatch yellow"><input type="radio" name="color" value="yellow"><span>Yellow</span></label>
 <label class="swatch pink"><input type="radio" name="color" value="pink"><span>Pink</span></label>
 </div></fieldset>
-<label for="expiry">Time limit</label>
+<label for="mode">When to show</label>
+<select id="mode"><option value="now">Show now</option><option value="schedule">Schedule</option></select>
+<div id="schedule-fields" hidden><p class="hint">All times: America/New_York (Eastern time).</p><label for="start">Start date and time</label><input type="datetime-local" id="start"><label for="end">End date and time</label><input type="datetime-local" id="end"><button id="stop-edit" type="button" class="secondary" hidden>Stop editing</button></div>
+<div id="now-fields"><label for="expiry">Time limit</label>
 <select id="expiry"><option value="5">5 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="180">3 hours</option><option value="360">6 hours</option><option value="1440">24 hours</option></select>
 <p class="hint">Sending again restarts the selected time limit; Clear removes the message early.</p>
+</div>
 <button id="send" class="primary" type="submit" disabled>Send to display <span aria-hidden="true">↗</span></button>
 <p class="hint">Updates on the next display refresh, usually within a minute.</p><p id="feedback" role="status" aria-live="polite"></p>
 </form></section>
 <aside>
 <section class="preview-card"><div class="preview-heading"><span>YOUR NOTE</span><span>PREVIEW</span></div><div id="preview-pages"></div><p id="page-count" class="preview-hint" role="status"></p><p class="preview-hint">Your text scrolls inside the flower border, without page breaks. Short text stays centered. Long messages scroll faster so the whole message fits within 15 seconds. Limit: 120 characters.</p></section>
 <section class="saved card"><div class="saved-title"><h2>Currently saved</h2><span id="active-indicator" class="dot"></span></div><p id="saved-message">Loading your message…</p><p id="saved-info" class="hint"></p><button id="clear" type="button" class="secondary" disabled>Clear the display</button></section>
+<section class="saved card"><h2>Scheduled messages</h2><p class="hint">New York time. Overlapping messages for the same app are not allowed. A scheduled message replaces any Show now message when it begins.</p><div id="schedules"></div></section>
 <p class="home-note">Made for your home Wi-Fi.<br>In Safari, use Share → Add to Home Screen.</p>
 </aside></div><footer>Small messages, shared moments.</footer>
 </main></body></html>
