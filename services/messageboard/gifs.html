@@ -8,7 +8,7 @@
 <button id="upload" class="primary">Upload GIF</button><p class="hint">Up to 8 MB, 300 frames, 1 megapixel and a 30-second source loop. Up to 30 GIFs in your playlist.</p></form>
 <p id="feedback" role="status" aria-live="polite"></p>
 <label for="seconds">Playback time per GIF</label><select id="seconds"><option value="5">5 seconds</option><option value="10" selected>10 seconds</option><option value="15">15 seconds</option></select>
-<p class="hint">Animations loop or stop at this duration. Converted to 64 × 32 pixels at 10 frames per second.</p>
+<p class="hint">Animations loop or stop at this duration. Converted to 64 × 32 pixels with original frame timing.</p>
 <p class="hint">In Tronbyt Manager: GIF Slideshow → render interval 0 (every time), Display Time 1 second, Show Full Animation True. The animation determines the longer playback time.</p>
 <p class="hint">Each render advances the playlist. Manager previews can advance it too. Files remain on your Pi.</p>
 </section><aside><section class="preview-card"><h2>Your playlist</h2><p class="hint">Previews show the converted size, framing and playback duration. Reordering restarts the playlist at the top.</p><div id="gallery"></div></section></aside></div>

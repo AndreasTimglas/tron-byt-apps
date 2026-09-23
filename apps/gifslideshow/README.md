@@ -32,7 +32,7 @@ A render failure after selection may skip an item until the next loop.
 
 - Fit preserves the whole image, adding black borders; Crop fills the display
   by trimming the centered image.
-- Converted previews and display use the same 64×32 frames at 10 fps.
+- Converted previews and display use the same 64×32 frames with original frame timing.
 - Select 5, 10 or 15 seconds for every GIF. Short GIFs loop; longer loops
   stop at the selected duration. There is no audio.
 - Move up/down sets playlist order. Editing the order or removing an entry
@@ -55,3 +55,8 @@ pixlet serve apps/gifslideshow/gifslideshow.star
 
 Transport errors remain host-handled. GET /api/gifs/next intentionally advances
 the shared playlist; listing and preview endpoints never advance it.
+
+Original per-frame delays are preserved; missing, zero and 10 ms GIF delays
+use a browser-style 100 ms fallback. Existing uploads are rebuilt automatically
+from stored originals. Update both the Pi service and the Pixlet app for this
+timing support. Playback duration controls how long a GIF stays, not its speed.

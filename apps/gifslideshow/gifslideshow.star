@@ -19,5 +19,6 @@ def main(config):
     data = json.decode(response.body(), default = None)
     if type(data) != "dict" or type(data.get("frames")) != "list" or not data["frames"]:
         return []
-    frames = [render.Image(src = base64.decode(frame)) for frame in data["frames"][:150]]
-    return render.Root(delay = 100, show_full_animation = True, child = render.Animation(children = frames))
+    holds = data.get("holds", [1 for frame in data["frames"]])
+    frames = [render.Image(src = base64.decode(frame), hold_frames = holds[index]) for index, frame in enumerate(data["frames"])]
+    return render.Root(delay = data.get("delay", 100), show_full_animation = True, child = render.Animation(children = frames))

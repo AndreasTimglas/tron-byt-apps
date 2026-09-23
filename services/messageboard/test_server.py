@@ -122,7 +122,8 @@ class BoardTests(unittest.TestCase):
         self.assertEqual(code, 200)
         ident = json.loads(body)["items"][0]["id"]
         self.assertEqual(self.request("GET", "/api/gifs/preview/" + ident)[0], 200)
-        self.assertEqual(len(json.loads(self.request("GET", "/api/gifs/next")[1])["frames"]), 100)
+        playback = json.loads(self.request("GET", "/api/gifs/next")[1])
+        self.assertEqual(sum(playback["holds"]) * playback["delay"], 10000)
         self.assertEqual(self.request("POST", "/api/gifs/change", {"action": "remove", "id": ident})[0], 200)
         self.assertEqual(self.request("GET", "/api/gifs/preview/" + ident)[0], 404)
         self.assertEqual(json.loads(self.request("GET", "/api/gifs/next")[1])["frames"], [])

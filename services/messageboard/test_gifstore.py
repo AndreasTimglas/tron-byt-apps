@@ -39,10 +39,10 @@ class GifTests(unittest.TestCase):
             self.assertEqual(im.size,(64,32))
             self.assertEqual(im.getpixel((0,0)),(0,0,0) if fit=="fit" else (255,0,0))
             self.assertNotEqual(frames[0],frames[1])
-            self.assertEqual(frames[1],frames[2])
+            self.assertEqual(frames[0],frames[2])
             for seconds in [5,10,15]:
                 self.store.change({"action":"duration","seconds":seconds})
-                self.assertEqual(len(self.store.frames(item["id"])),seconds*10)
+                self.assertEqual(sum(self.store.playback(item["id"])[1]),seconds*1000)
             preview=Image.open(io.BytesIO(self.store.preview(item["id"])))
             self.assertEqual(preview.size,(64,32))
     def test_invalid_upload_and_path(self):
@@ -55,3 +55,22 @@ class GifTests(unittest.TestCase):
         out=io.BytesIO();Image.new("RGB",(10,10)).save(out,format="PNG")
         with self.assertRaises(ValueError):
             self.store.upload({"fit":"fit","data":base64.b64encode(out.getvalue()).decode()})
+
+    def test_original_timing_and_legacy_migration(self):
+        item = self.store.upload(upload_data())["items"][0]
+        frames, durations = self.store.playback(item["id"])
+        self.assertEqual(durations[:4], [100, 200, 100, 200])
+        import json
+        path = self.store.folder / (item["id"] + ".json")
+        path.write_text(json.dumps([frames[0]]))
+        self.assertEqual(self.store.playback(item["id"])[1][:4], [100, 200, 100, 200])
+        result = self.store.next()
+        self.assertEqual(sum(result["holds"]) * result["delay"], 10000)
+
+    def test_browser_short_delay_fallback(self):
+        for delay in [0, 10, 20, 70, 250]:
+            out = io.BytesIO()
+            Image.new("RGB", (8,8), "red").save(out, format="GIF", save_all=True,
+                append_images=[Image.new("RGB", (8,8), "blue")], duration=[delay,300])
+            data = self.store.convert(out.getvalue(), "fit")
+            self.assertEqual(data["durations"], [100 if delay < 20 else delay, 300])
