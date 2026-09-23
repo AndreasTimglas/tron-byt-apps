@@ -1,4 +1,4 @@
-"""Small, dependency-free message board for a trusted home LAN."""
+"""Message board and GIF gallery for a trusted home LAN."""
 import argparse
 import json
 import logging
@@ -11,10 +11,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 from scheduling import save_schedule
+from gifstore import GifStore
 
 COLORS = {"white": "#ffffff", "green": "#66ff66", "yellow": "#ffdd66", "pink": "#ff88bb"}
 EXPIRIES = {5, 15, 30, 60, 180, 360, 1440}
-STATIC = {"/flowers": ("flowers.html", "text/html; charset=utf-8"), "/flowers.js": ("flowers.js", "text/javascript; charset=utf-8"), "/font.js": ("font.js", "text/javascript; charset=utf-8"), "/layout.js": ("layout.js", "text/javascript; charset=utf-8"), "/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
+STATIC = {"/gifs": ("gifs.html", "text/html; charset=utf-8"), "/gifs.js": ("gifs.js", "text/javascript; charset=utf-8"), "/flowers": ("flowers.html", "text/html; charset=utf-8"), "/flowers.js": ("flowers.js", "text/javascript; charset=utf-8"), "/font.js": ("font.js", "text/javascript; charset=utf-8"), "/layout.js": ("layout.js", "text/javascript; charset=utf-8"), "/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
 
 
 def validate(payload):
@@ -132,6 +133,7 @@ class Server(ThreadingHTTPServer):
     def __init__(self, address, store, allowed_hosts):
         self.store = store
         self.flowers = Store(store.path.with_name("flowers.json"))
+        self.gifs = GifStore(store.path.parent / "gifs")
         self.allowed_hosts = set(allowed_hosts)
         super().__init__(address, Handler)
 
@@ -171,6 +173,19 @@ class Handler(BaseHTTPRequestHandler):
         if not self.host_allowed():
             return
         path = urlsplit(self.path).path
+        if path in ("/api/gifs", "/api/gifs/next") or path.startswith("/api/gifs/preview/"):
+            try:
+                if path == "/api/gifs":
+                    self.respond(200, self.server.gifs.listing())
+                elif path == "/api/gifs/next":
+                    self.respond(200, self.server.gifs.next())
+                else:
+                    self.respond(200, self.server.gifs.preview(path.rsplit("/", 1)[-1]), "image/gif")
+            except ValueError as exc:
+                self.respond(404, {"error": str(exc)})
+            except OSError:
+                self.respond(503, {"error": "Could not read GIF storage."})
+            return
         if path in ("/api/message", "/api/flowers"):
             store = self.server.flowers if path == "/api/flowers" else self.server.store
             self.respond(200, store.read())
@@ -194,15 +209,21 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(415, {"error": "Expected JSON"})
             return
         path = urlsplit(self.path).path
-        if path not in ("/api/message", "/api/clear", "/api/flowers", "/api/flowers/clear", "/api/message/schedule", "/api/message/cancel", "/api/flowers/schedule", "/api/flowers/cancel"):
+        if path not in ("/api/gifs/upload", "/api/gifs/change", "/api/message", "/api/clear", "/api/flowers", "/api/flowers/clear", "/api/message/schedule", "/api/message/cancel", "/api/flowers/schedule", "/api/flowers/cancel"):
             self.respond(404, {"error": "Not found"})
             return
         try:
             size = int(self.headers.get("Content-Length", "0"))
-            if not 0 < size <= 4096:
+            if not 0 < size <= (12 * 1024 * 1024 if path == "/api/gifs/upload" else 4096):
                 self.respond(413, {"error": "Request is too large or empty"})
                 return
             payload = json.loads(self.rfile.read(size))
+            if path.startswith("/api/gifs/"):
+                if not isinstance(payload, dict):
+                    raise ValueError("Expected an upload or playlist action.")
+                result = self.server.gifs.upload(payload) if path.endswith("/upload") else self.server.gifs.change(payload)
+                self.respond(200, result)
+                return
             store = self.server.flowers if path.startswith("/api/flowers") else self.server.store
             if path.endswith("/schedule"):
                 state = store.schedule(payload)

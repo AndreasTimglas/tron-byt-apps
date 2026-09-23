@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>GIF Slideshow · Tronbyt</title><link rel="stylesheet" href="/style.css"><script src="/gifs.js" defer></script></head>
+<body><main><header><a class="brand" href="/gifs">GIF SLIDESHOW</a><span id="connection" class="connection">Connecting…</span></header>
+<nav class="ideas"><a href="/">Message Board</a><a href="/flowers">Anna Flowers</a><a href="/gifs">GIF Slideshow</a></nav>
+<section class="intro"><p class="eyebrow">YOUR LITTLE ANIMATION GALLERY</p><h1>A little motion.<br>A little magic.</h1><p>Upload your GIFs and give them a place on your display.</p></section>
+<div class="workspace"><section class="card"><form id="upload-form"><label for="file">Choose a GIF</label><input id="file" type="file" accept="image/gif,.gif" required>
+<label for="fit">How it fits</label><select id="fit"><option value="fit">Fit whole image · black borders</option><option value="crop">Crop to fill · centered</option></select>
+<button id="upload" class="primary">Upload GIF</button><p class="hint">Up to 8 MB, 300 frames, 1 megapixel and a 30-second source loop. Up to 30 GIFs in your playlist.</p></form>
+<p id="feedback" role="status" aria-live="polite"></p>
+<label for="seconds">Playback time per GIF</label><select id="seconds"><option value="5">5 seconds</option><option value="10" selected>10 seconds</option><option value="15">15 seconds</option></select>
+<p class="hint">Animations loop or stop at this duration. Converted to 64 × 32 pixels at 10 frames per second.</p>
+<p class="hint">In Tronbyt Manager: GIF Slideshow → render interval 0 (every time), Display Time 1 second, Show Full Animation True. The animation determines the longer playback time.</p>
+<p class="hint">Each render advances the playlist. Manager previews can advance it too. Files remain on your Pi.</p>
+</section><aside><section class="preview-card"><h2>Your playlist</h2><p class="hint">Previews show the converted size, framing and playback duration. Reordering restarts the playlist at the top.</p><div id="gallery"></div></section></aside></div>
+<footer>Small animations, shared moments.</footer></main></body></html>

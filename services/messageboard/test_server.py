@@ -114,6 +114,19 @@ class BoardTests(unittest.TestCase):
                 self.assertEqual(self.request("POST", endpoint + "/cancel", {"id": ident})[0], 200)
                 self.assertEqual(json.loads(self.request("GET", endpoint)[1])["schedules"], [])
 
+    def test_gif_endpoints_and_request_protection(self):
+        from test_gifstore import upload_data
+        self.assertEqual(self.request("GET", "/gifs")[0], 200)
+        self.assertEqual(self.request("POST", "/api/gifs/upload", upload_data(), {"Origin": "http://evil.example"})[0], 403)
+        code, body = self.request("POST", "/api/gifs/upload", upload_data())
+        self.assertEqual(code, 200)
+        ident = json.loads(body)["items"][0]["id"]
+        self.assertEqual(self.request("GET", "/api/gifs/preview/" + ident)[0], 200)
+        self.assertEqual(len(json.loads(self.request("GET", "/api/gifs/next")[1])["frames"]), 100)
+        self.assertEqual(self.request("POST", "/api/gifs/change", {"action": "remove", "id": ident})[0], 200)
+        self.assertEqual(self.request("GET", "/api/gifs/preview/" + ident)[0], 404)
+        self.assertEqual(json.loads(self.request("GET", "/api/gifs/next")[1])["frames"], [])
+
     def test_smart_punctuation_and_composed_unicode(self):
         text, _, _ = validate({"text": "  There’s a gift…  Malmo\u0308 "})
         self.assertEqual(text, "There's a gift... Malmö")

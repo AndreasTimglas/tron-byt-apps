@@ -3,3 +3,5 @@
 .pixel-preview{display:block;width:100%;height:auto;aspect-ratio:2/1;image-rendering:pixelated;background:#000;border:6px solid #262c26;border-radius:4px;margin-top:16px}#page-count{font-size:13px;font-weight:650;color:var(--ink)}
 
 [hidden]{display:none!important}input[type=datetime-local]{display:block;width:100%;min-width:0;padding:12px;margin:9px 0 18px;border:1px solid var(--line);border-radius:9px;background:#fffefb;color:var(--ink);font:inherit}.schedule-item{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;overflow-wrap:anywhere}.schedule-item p{margin:5px 0}.schedule-item button{margin-right:18px}
+
+input[type=file]{display:block;width:100%;margin:12px 0 22px;font:inherit;font-size:14px}.ideas a{color:var(--accent);padding:6px;text-decoration:underline}

@@ -102,7 +102,7 @@ docker compose down
 The final command stops the service but preserves messages. Do not add -v
 unless you intend to delete the saved data.
 
-The receiver uses only Python's standard library. Its endpoints are:
+The message receiver uses Python's standard library; GIF conversion additionally uses Pillow. Its endpoints are:
 
 - GET /: phone interface.
 - GET /api/message: current message and expiry information.
@@ -118,6 +118,7 @@ data volume, and restarts automatically after reboot.
 ## Local development and validation
 
 ~~~sh
+python3 -m pip install -r services/messageboard/requirements.txt
 python3 services/messageboard/server.py --host 127.0.0.1 --data /tmp/board/message.json
 python3 -m unittest discover -s services/messageboard -v
 pixlet check apps/messageboard/messageboard.star
@@ -200,3 +201,19 @@ Additional endpoints (same request protection as Send):
 Update the Pi service with git pull --ff-only and docker compose up -d --build,
 then reload the page. No display-app update is required for scheduling.
 The Docker image includes tzdata for New York daylight-saving rules.
+
+
+## GIF Slideshow
+
+The **GIF Slideshow** navigation link opens /gifs. Upload, preview, reorder
+and remove GIFs there; choose 5, 10 or 15 seconds of playback. Fit adds black
+borders and Crop fills the matrix. Data is kept under /data/gifs in the same
+Docker volume. Removing a GIF hides it from the playlist; its files are
+retained for manual recovery.
+
+See [the slideshow setup guide](../../apps/gifslideshow/README.md) for required
+Tronbyt render/display settings and limits. Each render (including a Manager
+preview) advances the shared playlist. The web page never advances it.
+
+GIF conversion uses Pillow, installed during the Docker build. For local
+development, install requirements.txt before running the service or tests.

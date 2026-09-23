@@ -1,0 +1,13 @@
+---
+id: gifslideshow
+name: GIF Slideshow
+summary: Your own animated GIF playlist
+desc: Animated GIFs uploaded to your Pi, fitted or cropped to 64 by 32 pixels.
+author: andreastimglas
+fileName: gifslideshow.star
+packageName: gifslideshow
+recommendedInterval: 0
+category: entertainment
+tags:
+  - art
+minPixletVersion: v0.54.0
