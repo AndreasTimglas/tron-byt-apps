@@ -20,5 +20,6 @@ def main(config):
     if type(data) != "dict" or type(data.get("frames")) != "list" or not data["frames"]:
         return []
     holds = data.get("holds", [1 for frame in data["frames"]])
-    frames = [render.Image(src = base64.decode(frame), hold_frames = holds[index]) for index, frame in enumerate(data["frames"])]
+    images = [render.Image(src = base64.decode(frame)) for frame in data["frames"]]
+    frames = [image for index, image in enumerate(images) for repeat in range(holds[index])]
     return render.Root(delay = data.get("delay", 100), show_full_animation = True, child = render.Animation(children = frames))
