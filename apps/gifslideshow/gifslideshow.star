@@ -3,6 +3,7 @@ load("encoding/json.star", "json")
 load("http.star", "http")
 load("render.star", "render")
 load("schema.star", "schema")
+load("time.star", "time")
 
 def get_schema():
     return schema.Schema(version = "1", fields = [
@@ -13,7 +14,10 @@ def main(config):
     server = (config.get("server") or "").strip().rstrip("/")
     if not server or (not server.startswith("http://") and not server.startswith("https://")):
         return []
-    response = http.get(server + "/api/gifs/next", ttl_seconds = 0)
+
+    # Pixlet imposes a minimum HTTP cache lifetime even with ttl_seconds = 0.
+    # A unique render timestamp keeps the stateful selector from being replayed.
+    response = http.get(server + "/api/gifs/next", params = {"render": str(time.now())}, ttl_seconds = 0)
     if response.status_code != 200:
         return []
     data = json.decode(response.body(), default = None)

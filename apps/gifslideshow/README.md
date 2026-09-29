@@ -60,3 +60,6 @@ Original per-frame delays are preserved; missing, zero and 10 ms GIF delays
 use a browser-style 100 ms fallback. Existing uploads are rebuilt automatically
 from stored originals. Update both the Pi service and the Pixlet app for this
 timing support. Playback duration controls how long a GIF stays, not its speed.
+
+Each render sends a unique timestamp to bypass Pixlet’s minimum HTTP cache
+lifetime. This does not override the Manager render interval: keep it at 0.
