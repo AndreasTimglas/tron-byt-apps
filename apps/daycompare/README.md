@@ -1,6 +1,6 @@
 # Daylight Compare
 
-A static 64×32 Tronbyt/Pixlet app comparing today's daylight and solar elevation
+A 64×32 Tronbyt/Pixlet app comparing today's daylight and solar elevation
 in two locations. Defaults: Malmö, Sweden, and Morristown, New Jersey.
 No network service, API key, or Pi companion server is needed.
 
@@ -9,7 +9,9 @@ No network service, API key, or Pi companion server is needed.
 - Top left: Swedish flag and daylight duration in hours:minutes.
 - Top right: daylight duration and US flag.
 - Blue/yellow curve: Swedish location. Red/white/blue curve: US location.
-- Bottom axis: local clock hours, 00, 06, 12, 18, 24.
+- Bottom axis: local clock hours, cropped from one hour before the earliest
+  sunrise to one hour after the latest sunset, rounded outward to whole hours.
+  Polar conditions or daylight crossing midnight use the full 00–24 axis.
 - Height: solar elevation, using the same scale for both curves.
 
 Each curve uses its city's own local time, **not simultaneous UTC time**.
@@ -38,7 +40,11 @@ Invalid coordinates or missing timezone values show SET CITY. Timezone names
 must be valid IANA names as supplied by the location picker.
 
 Recommended render interval: **60 minutes**. Suggested display time: **5 seconds**.
-The app is a single static frame, so it has no animation to finish before cycling.
+Normally the app is static. When calculated day lengths differ by **two minutes
+or less**, small flag-colored fireworks overlay the plot in a four-second loop.
+The comparison uses unrounded durations, not the displayed minute values.
+Flags, durations, and hour labels remain clear. Full-animation playback is not
+forced, so the configured display time can still control app rotation.
 
 ## Local development
 

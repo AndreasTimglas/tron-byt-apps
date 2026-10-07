@@ -63,13 +63,44 @@ def solar(lat, lon, year, month, day, offset_hours):
     else:
         crossing = (horizon - a) / b
         length = 24.0 if crossing <= -1 else 0.0 if crossing >= 1 else 2 * math.acos(crossing) / RAD / 15
-    elevations = []
+    noon = (720 - eq - 4 * lon + 60 * offset_hours) / 60
+    return {"length": length, "noon": noon, "rise": noon - length / 2, "set": noon + length / 2, "a": a, "b": b}
+
+def axis(cities):
+    # Polar conditions and daylight crossing midnight need the full clock axis.
+    for city in cities:
+        if city["length"] == 0 or city["length"] == 24 or city["rise"] < 0 or city["set"] > 24:
+            return (0, 24)
+    return (max(0, int(math.floor(min([c["rise"] for c in cities]) - 1))), min(24, int(math.ceil(max([c["set"] for c in cities]) + 1))))
+
+def elevations(city, start, end):
+    values = []
     for x in range(64):
-        hour = x * 24.0 / 63
-        angle = (hour * 60 + eq + 4 * lon - 60 * offset_hours) / 4 - 180
-        elevation = math.asin(max(-1, min(1, a + b * math.cos(angle * RAD)))) / RAD
-        elevations.append(elevation)
-    return (length, elevations)
+        hour = start + x * (end - start) / 63.0
+        angle = (hour - city["noon"]) * 15 * RAD
+        values.append(math.asin(max(-1, min(1, city["a"] + city["b"] * math.cos(angle)))) / RAD)
+    return values
+
+def celebrate(sweden, usa):
+    # Compare unrounded durations; tiny tolerance handles floating-point arithmetic.
+    return abs(sweden["length"] - usa["length"]) * 60 <= 2 + 0.0000001
+
+def fireworks(frame):
+    children = []
+    for cx, cy, delay, colors in [(15, 14, 0, ["#ffdd33", "#4488ff"]), (47, 14, 4, ["#ff5555", "#ffffff", "#4488ff"])]:
+        age = frame - delay
+        if age < 0 or age > 11:
+            continue
+        if age < 3:
+            children.append(pixel(cx, 23 - age * 3, "#ffffff"))
+        else:
+            radius = 1 + (age - 3) // 2
+            for i, direction in enumerate([(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]):
+                x = cx + direction[0] * radius
+                y = cy + direction[1] * radius
+                if age < 9 or i % 2 == age % 2:
+                    children.append(pixel(x, y, colors[i % len(colors)]))
+    return children
 
 def today(loc):
     local = time.now().in_location(loc[2])
@@ -107,15 +138,18 @@ def screen(sweden, usa):
         placed(0, 1, flag()),
         placed(57, 1, flag(True)),
     ]
-    left = render.Text(duration(sweden[0]), font = "tom-thumb", color = "#ffffff")
-    right = render.Text(duration(usa[0]), font = "tom-thumb", color = "#ffffff")
+    left = render.Text(duration(sweden["length"]), font = "tom-thumb", color = "#ffffff")
+    right = render.Text(duration(usa["length"]), font = "tom-thumb", color = "#ffffff")
     children.extend([placed(9, 0, left), placed(55 - right.size()[0], 0, right)])
 
+    start, end = axis([sweden, usa])
+    samples = [elevations(city, start, end) for city in [sweden, usa]]
+
     # A common scale retains real differences in peak solar elevation.
-    ceiling = max(10, min(90, (int(max(max(sweden[1]), max(usa[1]))) // 10 + 1) * 10))
+    ceiling = max(10, min(90, (int(max(max(samples[0]), max(samples[1]))) // 10 + 1) * 10))
     for x in range(0, 64, 3):
         children.append(pixel(x, 25, "#333333"))
-    curves = [curve(sweden[1], ceiling), curve(usa[1], ceiling)]
+    curves = [curve(samples[0], ceiling), curve(samples[1], ceiling)]
     for index in range(2):
         for point in curves[index]:
             x, y = point
@@ -123,9 +157,23 @@ def screen(sweden, usa):
                 continue
             palette = PALETTES[index]
             children.append(pixel(x, y, palette[(x // 3) % len(palette)]))
-    for x, label in [(0, "00"), (14, "06"), (29, "12"), (45, "18"), (57, "24")]:
-        children.append(placed(x, 27, render.Text(label, font = "tom-thumb", height = 5, color = "#777777")))
-    return render.Root(child = render.Stack(children = children))
+
+    # Four whole-hour labels placed at their actual time positions.
+    hours = [start, start + (end - start) // 3, start + 2 * (end - start) // 3, end]
+    for hour in hours:
+        label = ("0" if hour < 10 else "") + str(hour)
+        text = render.Text(label, font = "tom-thumb", height = 5, color = "#777777")
+        x = int((hour - start) * 63.0 / (end - start) + 0.5)
+        children.append(placed(max(0, min(64 - text.size()[0], x - text.size()[0] // 2)), 27, text))
+    base = render.Stack(children = children)
+    if not celebrate(sweden, usa):
+        return render.Root(child = base)
+
+    # A four-second loop, with clear pauses and no forced full-animation playback.
+    frames = []
+    for frame in range(20):
+        frames.append(render.Stack(children = [base] + fireworks(frame - 2)))
+    return render.Root(delay = 200, child = render.Animation(children = frames))
 
 def main(config):
     sweden = location(config.get("sweden"), SWEDEN)
