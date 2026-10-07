@@ -1,0 +1,13 @@
+---
+id: daycompare
+name: Daylight Compare
+summary: Compare daylight in two cities
+desc: Swedish and US flag-colored solar elevation curves with sunrise-to-sunset day lengths, on a shared local-time axis.
+author: andreastimglas
+fileName: daycompare.star
+packageName: daycompare
+recommendedInterval: 60
+category: utilities
+tags:
+  - weather
+minPixletVersion: v0.54.0
