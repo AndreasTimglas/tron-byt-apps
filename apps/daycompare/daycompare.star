@@ -98,7 +98,7 @@ def fireworks(frame):
             for i, direction in enumerate([(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]):
                 x = cx + direction[0] * radius
                 y = cy + direction[1] * radius
-                if age < 9 or i % 2 == age % 2:
+                if y >= 12 and (age < 9 or i % 2 == age % 2):
                     children.append(pixel(x, y, colors[i % len(colors)]))
     return children
 
@@ -108,9 +108,18 @@ def today(loc):
     offset = (int(zone[1:3]) + int(zone[3:5]) / 60.0) * (-1 if zone[0] == "-" else 1)
     return solar(loc[0], loc[1], int(local.format("2006")), int(local.format("01")), int(local.format("02")), offset)
 
-def duration(hours):
-    minutes = min(1440, max(0, int(hours * 60 + 0.5)))
-    return str(minutes // 60) + ":" + ("0" if minutes % 60 < 10 else "") + str(minutes % 60)
+def clock_label(city, event):
+    if city["length"] in [0, 24]:
+        return "--:--"
+    minutes = int(math.floor(city[event] * 60 + 0.5)) % 1440
+    hour = minutes // 60
+    minute = minutes % 60
+    return ("0" if hour < 10 else "") + str(hour) + ":" + ("0" if minute < 10 else "") + str(minute)
+
+def event_arrow(x, y, rising, color):
+    # Three-pixel-wide arrow, separate from the time text.
+    tip = y if rising else y + 2
+    return [pixel(x + 1, y + row, color) for row in range(3)] + [pixel(x, tip + (1 if rising else -1), color), pixel(x + 2, tip + (1 if rising else -1), color)]
 
 def flag(us = False):
     children = []
@@ -125,9 +134,9 @@ def curve(elevations, ceiling):
     for x, elevation in enumerate(elevations):
         if elevation < -0.833:
             continue
-        y = 25 - int(max(0, elevation) * 15 / ceiling + 0.5)
+        y = 25 - int(max(0, elevation) * 12 / ceiling + 0.5)
         previous = elevations[x - 1] if x else elevation
-        previous_y = 25 - int(max(0, previous) * 15 / ceiling + 0.5)
+        previous_y = 25 - int(max(0, previous) * 12 / ceiling + 0.5)
         for row in range(min(y, previous_y), max(y, previous_y) + 1):
             points[(x, row)] = True
     return points
@@ -135,12 +144,13 @@ def curve(elevations, ceiling):
 def screen(sweden, usa):
     children = [
         render.Box(width = 64, height = 32, color = "#000000"),
-        placed(0, 1, flag()),
-        placed(57, 1, flag(True)),
+        placed(0, 3, flag()),
+        placed(57, 3, flag(True)),
     ]
-    left = render.Text(duration(sweden["length"]), font = "tom-thumb", color = "#ffffff")
-    right = render.Text(duration(usa["length"]), font = "tom-thumb", color = "#ffffff")
-    children.extend([placed(9, 0, left), placed(55 - right.size()[0], 0, right)])
+    for city, x in [(sweden, 8), (usa, 33)]:
+        for event, y, color in [("rise", 0, "#ffdd88"), ("set", 6, "#aaccff")]:
+            children.extend(event_arrow(x, y + 1, event == "rise", color))
+            children.append(placed(x + 4, y, render.Text(clock_label(city, event), font = "tom-thumb", color = color)))
 
     start, end = axis([sweden, usa])
     samples = [elevations(city, start, end) for city in [sweden, usa]]

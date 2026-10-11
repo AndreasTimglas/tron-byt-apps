@@ -6,8 +6,9 @@ No network service, API key, or Pi companion server is needed.
 
 ## Display
 
-- Top left: Swedish flag and daylight duration in hours:minutes.
-- Top right: daylight duration and US flag.
+- Top left: Swedish flag, sunrise (up arrow) and sunset (down arrow).
+- Top right: sunrise and sunset with the US flag.
+- Times are local 24-hour HH:MM, with sunrise above sunset.
 - Blue/yellow curve: Swedish location. Red/white/blue curve: US location.
 - Bottom axis: local clock hours, cropped from one hour before the earliest
   sunrise to one hour after the latest sunset, rounded outward to whole hours.
@@ -27,8 +28,9 @@ Daylight is estimated sunrise-to-sunset time, **not cloud-free sunshine**.
 The calculation follows the [NOAA fractional-year solar equations](https://gml.noaa.gov/grad/solcalc/solareqns.PDF),
 with a -0.833° sunrise/sunset threshold for standard refraction and the solar
 disc. Terrain, buildings, and actual atmospheric conditions are not modeled.
-Durations are rounded to minutes; they are approximate, not observational
-measurements. Polar day/night show 24:00 or 0:00.
+Event times are rounded to minutes; they are approximate, not observational
+measurements. Polar day/night show --:-- because there is no sunrise/sunset
+crossing. Day length is still calculated internally for the fireworks comparison.
 
 ## Install and configure
 
@@ -42,8 +44,8 @@ must be valid IANA names as supplied by the location picker.
 Recommended render interval: **60 minutes**. Suggested display time: **5 seconds**.
 Normally the app is static. When calculated day lengths differ by **two minutes
 or less**, small flag-colored fireworks overlay the plot in a four-second loop.
-The comparison uses unrounded durations, not the displayed minute values.
-Flags, durations, and hour labels remain clear. Full-animation playback is not
+The comparison uses unrounded durations, not rounded sunrise/sunset labels.
+Flags, event times, and hour labels remain clear. Full-animation playback is not
 forced, so the configured display time can still control app rotation.
 
 ## Local development
@@ -65,3 +67,8 @@ pixlet render daycompare.star 'sweden={"lat":"59.3293","lng":"18.0686","timezone
 Validated with Tronbyt Pixlet v0.54.0: check, default render, and deterministic
 checks for equatorial equinox, both poles in summer/winter, seasonal day-length
 ordering, timezone shifts, leap day, duration formatting, and invalid coordinates.
+
+Calculation review: verified the equation of time, declination, hour angle,
+longitude sign, timezone offset, and 90.833° sunrise/sunset zenith against NOAA.
+Day length equals sunset minus sunrise before rounding (for ordinary days).
+This remains the fractional-year approximation, not a precision ephemeris.
