@@ -2,7 +2,7 @@
 
 A 64×32 animated **three-hour precipitation forecast** centered on Morristown,
 New Jersey (40.7968° N, 74.4815° W). A dark geographic map stays behind the
-forecast precipitation echoes, with a white location marker with a thin black outline at the center.
+forecast precipitation echoes, with a white location marker at the center.
 
 ## Source: NOAA / National Weather Service
 
@@ -46,8 +46,7 @@ represents about 5.5 miles near the center, so this is a regional overview.
 The plus sign is three pixels wide and three pixels tall, using **five lit
 pixels**. Three lit pixels alone cannot form a symmetric plus. Its center is
 at (32,16), the nearest center pixel on the even-sized display, always drawn
-above the precipitation layer. A one-pixel black outline keeps the white plus
-visible over bright forecast colors; the complete marker occupies 5×5 pixels.
+above the precipitation layer.
 
 `basemap.png` is an original pixel rendering of public-domain
 [Natural Earth](https://www.naturalearthdata.com/about/terms-of-use/) land and
