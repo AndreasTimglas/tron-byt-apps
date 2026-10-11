@@ -46,8 +46,8 @@ def frame(image_data, label):
         render.Image(src = BASEMAP),
         render.Image(src = image_data),
         # A 3px-wide/tall plus (five lit pixels), centered to pixel precision.
-        placed(31, 16, render.Box(width = 3, height = 1, color = "#ffffff")),
-        placed(32, 15, render.Box(width = 1, height = 3, color = "#ffffff")),
+        placed(31, 16, render.Box(width = 3, height = 1, color = "#ff00ff")),
+        placed(32, 15, render.Box(width = 1, height = 3, color = "#ff00ff")),
         render.Box(width = 20, height = 6, color = "#000000", child = render.Text("FCST", font = "tom-thumb", color = "#aaaaaa")),
         placed(43, 0, render.Box(width = 21, height = 6, color = "#000000", child = render.Text(label, font = "tom-thumb"))),
     ])

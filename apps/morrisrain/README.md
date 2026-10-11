@@ -2,7 +2,7 @@
 
 A 64×32 animated **three-hour precipitation forecast** centered on Morristown,
 New Jersey (40.7968° N, 74.4815° W). A dark geographic map stays behind the
-forecast precipitation echoes, with a white location marker at the center.
+forecast precipitation echoes, with a bright magenta location marker at the center.
 
 ## Source: NOAA / National Weather Service
 
