@@ -1,0 +1,13 @@
+---
+id: weatherplay
+name: Weather Play
+summary: A playful animated forecast
+desc: Pixel weather stories for the next three hours. Fire, a duck in the rain, snow, a runaway umbrella and more. Celsius, configurable location, and no API key.
+author: andreastimglas
+fileName: weatherplay.star
+packageName: weatherplay
+recommendedInterval: 10
+category: weather
+tags:
+  - weather
+minPixletVersion: v0.54.0
