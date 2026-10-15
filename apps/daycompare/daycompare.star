@@ -2,6 +2,7 @@ load("encoding/json.star", "json")
 load("math.star", "math")
 load("render.star", "render")
 load("schema.star", "schema")
+load("sunrise.star", "sunrise")
 load("time.star", "time")
 
 SWEDEN = '{"lat":"55.6050","lng":"13.0038","timezone":"Europe/Stockholm"}'
@@ -77,7 +78,7 @@ def elevations(city, start, end):
     values = []
     for x in range(64):
         hour = start + x * (end - start) / 63.0
-        angle = (hour - city["noon"]) * 15 * RAD
+        angle = (hour - city["noon"]) * city.get("curve_scale", 1) * 15 * RAD
         values.append(math.asin(max(-1, min(1, city["a"] + city["b"] * math.cos(angle)))) / RAD)
     return values
 
@@ -102,13 +103,45 @@ def fireworks(frame):
                     children.append(pixel(x, y, colors[i % len(colors)]))
     return children
 
-def today(loc):
-    local = time.now().in_location(loc[2])
+def local_hour(moment):
+    return int(moment.format("15")) + int(moment.format("04")) / 60.0 + int(moment.format("05")) / 3600.0
+
+def for_date(loc, local):
     zone = local.format("-0700")
     offset = (int(zone[1:3]) + int(zone[3:5]) / 60.0) * (-1 if zone[0] == "-" else 1)
-    return solar(loc[0], loc[1], int(local.format("2006")), int(local.format("01")), int(local.format("02")), offset)
+    city = solar(loc[0], loc[1], int(local.format("2006")), int(local.format("01")), int(local.format("02")), offset)
+
+    # Use the same event calculator and HH:MM formatting as Sunrise Sunset.
+    rise = sunrise.sunrise(float(loc[0]), float(loc[1]), local)
+    setting = sunrise.sunset(float(loc[0]), float(loc[1]), local)
+    city["rise_label"] = "--:--"
+    city["set_label"] = "--:--"
+    if rise != None and setting != None:
+        rise = rise.in_location(loc[2])
+        setting = setting.in_location(loc[2])
+        length = (setting.unix - rise.unix) / 3600.0
+        if length < 0:
+            length += 24
+        city["rise"] = local_hour(rise)
+        city["set"] = local_hour(setting)
+        if city["set"] < city["rise"]:
+            city["set"] += 24
+
+        # Align the approximate elevation arc with the authoritative event times.
+        span = city["set"] - city["rise"]
+        city["curve_scale"] = city["length"] / span if span > 0 else 1
+        city["length"] = length
+        city["noon"] = (city["rise"] + city["set"]) / 2
+        city["rise_label"] = rise.format("15:04")
+        city["set_label"] = setting.format("15:04")
+    return city
+
+def today(loc):
+    return for_date(loc, time.now().in_location(loc[2]))
 
 def clock_label(city, event):
+    if event + "_label" in city:
+        return city[event + "_label"]
     if city["length"] in [0, 24]:
         return "--:--"
     minutes = int(math.floor(city[event] * 60 + 0.5)) % 1440

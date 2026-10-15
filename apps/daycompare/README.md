@@ -17,20 +17,22 @@ No network service, API key, or Pi companion server is needed.
 
 Each curve uses its city's own local time, **not simultaneous UTC time**.
 The curves therefore compare the shape and length of the local day. Each city
-uses its own current calendar date and timezone offset at render time, including
-DST. On a clock-change day, the plot uses that single offset for the entire day.
+uses its own current calendar date. Sunrise and sunset are converted separately
+to the selected timezone, including the DST offset at each event.
 The shared vertical scale adjusts seasonally to use the available pixels;
 heights are comparable within a screen, but not between screenshots from
 separate seasons. Only the daylight portion is drawn. Overlapping curve pixels
 alternate between the two countries so neither curve completely hides the other.
 
 Daylight is estimated sunrise-to-sunset time, **not cloud-free sunshine**.
-The calculation follows the [NOAA fractional-year solar equations](https://gml.noaa.gov/grad/solcalc/solareqns.PDF),
-with a -0.833° sunrise/sunset threshold for standard refraction and the solar
-disc. Terrain, buildings, and actual atmospheric conditions are not modeled.
-Event times are rounded to minutes; they are approximate, not observational
-measurements. Polar day/night show --:-- because there is no sunrise/sunset
-crossing. Day length is still calculated internally for the fireworks comparison.
+Event times use Pixlet's built-in `sunrise.star`, the same calculator as the
+[official Sunrise Sunset app](https://github.com/tronbyt/apps/blob/main/apps/sunrisesunset/sunrise_sunset.star).
+Labels use the same HH:MM formatting (seconds are omitted, not rounded).
+Day length for fireworks is the elapsed time between the events before formatting.
+The graph retains the approximate NOAA elevation shape, aligned to the calculated
+sunrise and sunset endpoints. Terrain, buildings, and actual atmospheric
+conditions are not modeled. Polar day/night show --:-- when no event occurs;
+the NOAA approximation supplies the polar day-length fallback.
 
 ## Install and configure
 
@@ -68,7 +70,7 @@ Validated with Tronbyt Pixlet v0.54.0: check, default render, and deterministic
 checks for equatorial equinox, both poles in summer/winter, seasonal day-length
 ordering, timezone shifts, leap day, duration formatting, and invalid coordinates.
 
-Calculation review: verified the equation of time, declination, hour angle,
-longitude sign, timezone offset, and 90.833° sunrise/sunset zenith against NOAA.
-Day length equals sunset minus sunrise before rounding (for ordinary days).
-This remains the fractional-year approximation, not a precision ephemeris.
+Regression checks compare both cities against the official app's event calls
+for October 15, both 2026 spring DST transition dates, and both solstices.
+Check both location fields in Manager: saved values override the code defaults.
+If both fields select the same city, their times will correctly be identical.
