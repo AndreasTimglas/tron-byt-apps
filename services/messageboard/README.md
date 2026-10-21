@@ -217,3 +217,54 @@ preview) advances the shared playlist. The web page never advances it.
 
 GIF conversion uses Pillow, installed during the Docker build. For local
 development, install requirements.txt before running the service or tests.
+
+## Spin the Wheel
+
+Open `/wheel` from the shared navigation. Enter 2–12 distinct labels, each
+up to 20 Latin-1 characters. Choices have equal probability. The service picks
+the winner once, renders an 8-second 64×32 wheel animation with a fixed pointer,
+then shows the full winning label. The generated image is pushed to Tronbyt
+and pinned while the round runs. Done or the automatic timeout (about 68 seconds
+after the push) removes the temporary wheel and restores the previous pin.
+New spins are blocked while a round is active. Labels are remembered in the
+browser. Closing the browser does not cancel automatic cleanup.
+
+This feature requires a Tronbyt server supporting the documented `/v0` device,
+raw image push, installation pin/update and delete APIs. Configure the existing
+Compose service in its ignored `.env` file on the Pi:
+
+```text
+WHEEL_TRONBYT_URL=http://192.168.0.127:8000
+WHEEL_TRONBYT_DEVICE=<device-id-from-Manager>
+WHEEL_TRONBYT_KEY=<per-device-API-key-from-Manager>
+```
+
+Use the Pi's actual LAN address, reachable from inside Docker; `localhost`
+inside this container refers to the message service, not Tronbyt. Keep the
+key on the Pi. It is never sent to the browser or stored in the round state.
+Rebuild with `docker compose up -d --build` after configuring it. No custom
+Pixlet app or repository refresh is needed for the wheel.
+
+Round recovery information is written to `/data/wheel.json` before changing
+the display. The background worker retries cleanup after network failures and
+after service restarts. Manual pin changes made in Manager during a round are
+preserved. If both the message service and its recovery worker are stopped,
+a pin cannot expire itself; restart the service or unpin the wheel in Manager.
+
+Timing begins at the server's push acknowledgement, not a hardware playback
+acknowledgement. Foreground pushes interrupt immediately on compatible
+WebSocket firmware; polling firmware may start later. Done/timeout restores
+the server rotation, and actual screen changes depend on the device's next
+refresh. Verify one complete round on the physical panel after deployment,
+including Done and the timeout. Night mode and other apps that auto-pin may
+have their own precedence; those need verification on the installed version.
+
+Additional endpoints, protected like the existing message writes:
+- `GET /api/wheel`: connection configuration status and current round.
+- `POST /api/wheel/spin`: `{ "labels": ["Pizza", "Tacos"] }`.
+- `POST /api/wheel/done`: `{ "id": "<current-round-id>" }`.
+
+Development validation includes image timing and pointer alignment, input
+validation, concurrent-round rejection, persisted recovery, pin restoration,
+manual pin changes, and retry after cleanup failure. The full Python suite
+also covers the existing message, flowers, scheduling and GIF paths.

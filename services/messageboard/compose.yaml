@@ -4,6 +4,9 @@ services:
     ports:
       - "8787:8787"
     environment:
+      WHEEL_TRONBYT_URL: "${WHEEL_TRONBYT_URL:-}"
+      WHEEL_TRONBYT_DEVICE: "${WHEEL_TRONBYT_DEVICE:-}"
+      WHEEL_TRONBYT_KEY: "${WHEEL_TRONBYT_KEY:-}"
       BOARD_ALLOWED_HOSTS: "${BOARD_ALLOWED_HOSTS:-localhost,127.0.0.1,tidbyt-pi.local,192.168.0.127}"
     volumes:
       - board_data:/data
