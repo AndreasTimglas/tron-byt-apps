@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f5f3ed"><title>Timer · Tronbyt</title><link rel="stylesheet" href="/style.css"><script src="/timer.js" defer></script></head>
+<body><main><header><a class="brand" href="/"><span class="brand-icon">✳</span> THE MESSAGE BOARD</a><span id="connection" class="connection">Connecting…</span></header>
+<nav class="ideas"><a href="/">Message Board</a><a href="/flowers">Anna Flowers</a><a href="/gifs">GIF Slideshow</a><a href="/wheel">Spin the Wheel</a><a href="/timer" aria-current="page">Timer</a></nav>
+<section class="intro"><p class="eyebrow">SOMETHING TO LOOK FORWARD TO.</p><h1>Count down<br>to the good stuff.</h1><p>Your message. A ticking clock.<br>A little celebration when the wait is over.</p></section>
+<div class="workspace"><section class="composer card"><form id="timer-form">
+<label for="message">Your message</label><textarea id="message" maxlength="120" rows="3" placeholder="Pizza party!" required></textarea>
+<p class="hint">Two lines above the clock. Preview checks what fits, including Swedish letters. Shorten the message if it needs another page.</p>
+<label for="duration">Time remaining</label><input id="duration" class="timer-duration" type="text" maxlength="80" placeholder="45 min" value="1h" required autocomplete="off">
+<p class="hint">Try 45 min, 1h 30m, or 00:45:00. Two numbers mean MM:SS; three mean HH:MM:SS. Between 1 second and 24 hours.</p>
+<button id="preview-timer" class="secondary" type="button">Preview on the screen</button>
+<p id="preview-description" class="hint">Preview first, then start when you are ready.</p>
+<button class="primary" id="start" type="submit" disabled>Start countdown ↗</button><p id="feedback" role="status" aria-live="polite"></p>
+</form></section>
+<aside><section class="preview-card"><div class="preview-heading"><span>YOUR COUNTDOWN</span><span id="preview-label">PREVIEW</span></div>
+<div class="timer-display"><img id="screen" width="64" height="32" alt="Your 64 by 32 pixel timer preview" hidden></div>
+<p class="hint">The preview uses the same pixels as the display. Below one hour the clock reads 59:59, 59:58…</p>
+<details><summary>At zero</summary><div class="timer-display"><img id="finish-screen" width="64" height="32" alt="Preview of message with fireworks" hidden></div><p class="hint">Your message stays visible with fireworks for one minute.</p></details>
+</section><section class="saved card timer-status"><h2 id="status-title">Ready when you are</h2><p id="status-text">The timer takes over the display until the celebration ends.</p><button id="cancel" class="secondary" type="button" disabled>Cancel · resume other content</button></section>
+<p class="home-note">You can close this page; the Pi keeps time.<br>Other apps resume after the one-minute celebration.</p></aside></div><footer>Make the waiting part of the fun.</footer></main></body></html>

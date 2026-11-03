@@ -268,3 +268,85 @@ Development validation includes image timing and pointer alignment, input
 validation, concurrent-round rejection, persisted recovery, pin restoration,
 manual pin changes, and retry after cleanup failure. The full Python suite
 also covers the existing message, flowers, scheduling and GIF paths.
+
+## Timer
+
+Open the **Timer** tab (`/timer`). Enter your message and a free-text duration,
+then select **Preview on the screen**. The server renders the preview with the
+exact font, wrapping, alignment and pixels used on the display. Start stays
+unavailable until the current message and duration have been previewed.
+
+Examples: `45 min`, `1h 30m`, `59:59`, `00:45:00`. Two colon-separated numbers
+mean **MM:SS**; three mean **HH:MM:SS**. Include a unit for a single number.
+The range is 1 second to 24 hours. Messages must fit in two 60-pixel-wide lines;
+longer messages are rejected with a shortening prompt, never silently clipped
+or split across pages. Swedish characters are supported. Below one hour the
+large clock reads `59:59`, `59:58`, etc. Longer durations use `HH:MM:SS` in a
+smaller font so all digits fit.
+
+Starting creates a temporary pinned installation, pausing other apps. At zero,
+the message remains with fireworks for **60 seconds**, then the temporary
+installation is removed and normal rotation resumes. Cancel releases it early.
+A new manual pin or unpin in Manager is respected rather than overwritten.
+The timer and Spin the Wheel cannot be started on top of one another.
+
+The Pi stores the absolute finish time in `/data/timer.json` in the existing
+Docker volume. Closing the browser does not stop the timer. Restarting the
+service resumes from that finish time or releases an already-expired timer.
+Cleanup and failed pushes are retried after connection errors. The Pi and
+Tronbyt must remain reachable: an offline/stopped Pi cannot refresh the image
+or release the pin. Restart the service or unpin manually in Manager if needed.
+
+### Connection and update
+
+Timer shares the existing **Spin the Wheel** device connection. If that is
+already configured, no additional credentials are needed. Otherwise set these
+in `services/messageboard/.env` on the Pi (do not share the device key):
+
+```text
+WHEEL_TRONBYT_URL=http://192.168.0.127:8000
+WHEEL_TRONBYT_DEVICE=<your-device-id>
+WHEEL_TRONBYT_KEY=<your-per-device-API-key>
+```
+
+Use the actual Pi address. Then update/rebuild the message service:
+
+```sh
+cd ~/tronbyt-messages
+git pull --ff-only
+cd services/messageboard
+docker compose up -d --build
+docker compose ps
+```
+
+Reload the message page and choose **Timer**. No extra Pixlet app, render
+interval or custom-repository refresh is required: the service pushes the
+rendered countdown directly using the same API as Spin the Wheel.
+
+### Timing and verification
+
+The display plays encoded one-second countdown steps, not a once-per-minute
+Pixlet render. Bounded 40-second WebP clips are refreshed every 25 seconds
+from the saved finish timestamp, avoiding an enormous multi-hour animation.
+Fireworks frames are included across the zero boundary. The live browser
+preview uses the same renderer and polls the server once a second.
+
+There is no hardware playback acknowledgement. Network transfer and firmware
+refresh can introduce lag or a small correction at clip refresh. WebSocket
+firmware is preferred; polling firmware may update later. This is a party
+countdown, not a precision timing instrument. During an outage, the last clip
+may repeat until connectivity returns. Night mode or other auto-pinning apps
+can override a timer, just as with the wheel.
+
+After installation, run a short timer on the physical panel, check that
+seconds advance, then let the full minute of fireworks finish. Also test
+Cancel. Automated tests cover the timeline and API lifecycle using a simulated
+device; actual panel behavior still needs this deployment check.
+
+Endpoints (same origin/host checks as the other message tools):
+- `GET /api/timer`: status, server time, and active preview image.
+- `POST /api/timer/preview`: `{ "text": "Pizza party!", "duration": "1h" }`.
+- `POST /api/timer/start`: same fields as preview.
+- `POST /api/timer/cancel`: `{ "id": "<current-timer-id>" }`.
+
+Run tests from this directory with `python -m unittest discover -p 'test_*.py'`.

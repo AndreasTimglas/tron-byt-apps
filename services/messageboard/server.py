@@ -13,10 +13,11 @@ from urllib.parse import urlsplit
 from scheduling import save_schedule
 from gifstore import GifStore
 from wheel import Wheel
+from countdown import Timer, preview as timer_preview
 
 COLORS = {"white": "#ffffff", "green": "#66ff66", "yellow": "#ffdd66", "pink": "#ff88bb"}
 EXPIRIES = {5, 15, 30, 60, 180, 360, 1440}
-STATIC = {"/wheel": ("wheel.html", "text/html; charset=utf-8"), "/wheel.js": ("wheel.js", "text/javascript; charset=utf-8"), "/gifs": ("gifs.html", "text/html; charset=utf-8"), "/gifs.js": ("gifs.js", "text/javascript; charset=utf-8"), "/flowers": ("flowers.html", "text/html; charset=utf-8"), "/flowers.js": ("flowers.js", "text/javascript; charset=utf-8"), "/font.js": ("font.js", "text/javascript; charset=utf-8"), "/layout.js": ("layout.js", "text/javascript; charset=utf-8"), "/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
+STATIC = {"/timer": ("timer.html", "text/html; charset=utf-8"), "/timer.js": ("timer.js", "text/javascript; charset=utf-8"), "/wheel": ("wheel.html", "text/html; charset=utf-8"), "/wheel.js": ("wheel.js", "text/javascript; charset=utf-8"), "/gifs": ("gifs.html", "text/html; charset=utf-8"), "/gifs.js": ("gifs.js", "text/javascript; charset=utf-8"), "/flowers": ("flowers.html", "text/html; charset=utf-8"), "/flowers.js": ("flowers.js", "text/javascript; charset=utf-8"), "/font.js": ("font.js", "text/javascript; charset=utf-8"), "/layout.js": ("layout.js", "text/javascript; charset=utf-8"), "/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
 
 
 def validate(payload):
@@ -136,11 +137,14 @@ class Server(ThreadingHTTPServer):
         self.flowers = Store(store.path.with_name("flowers.json"))
         self.gifs = GifStore(store.path.parent / "gifs")
         self.wheel = Wheel(store.path.with_name("wheel.json"))
+        self.timer = Timer(store.path.with_name("timer.json"))
+        self.takeover_lock = threading.RLock()
         self.allowed_hosts = set(allowed_hosts)
         super().__init__(address, Handler)
 
     def server_close(self):
         self.wheel.stop.set()
+        self.timer.stop.set()
         super().server_close()
 
 
@@ -192,7 +196,9 @@ class Handler(BaseHTTPRequestHandler):
             except OSError:
                 self.respond(503, {"error": "Could not read GIF storage."})
             return
-        if path == "/api/wheel":
+        if path == "/api/timer":
+            self.respond(200, self.server.timer.read())
+        elif path == "/api/wheel":
             self.respond(200, self.server.wheel.read())
         elif path in ("/api/message", "/api/flowers"):
             store = self.server.flowers if path == "/api/flowers" else self.server.store
@@ -217,7 +223,7 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(415, {"error": "Expected JSON"})
             return
         path = urlsplit(self.path).path
-        if path not in ("/api/wheel/spin", "/api/wheel/done", "/api/gifs/upload", "/api/gifs/change", "/api/message", "/api/clear", "/api/flowers", "/api/flowers/clear", "/api/message/schedule", "/api/message/cancel", "/api/flowers/schedule", "/api/flowers/cancel"):
+        if path not in ("/api/timer/preview", "/api/timer/start", "/api/timer/cancel", "/api/wheel/spin", "/api/wheel/done", "/api/gifs/upload", "/api/gifs/change", "/api/message", "/api/clear", "/api/flowers", "/api/flowers/clear", "/api/message/schedule", "/api/message/cancel", "/api/flowers/schedule", "/api/flowers/cancel"):
             self.respond(404, {"error": "Not found"})
             return
         try:
@@ -226,8 +232,21 @@ class Handler(BaseHTTPRequestHandler):
                 self.respond(413, {"error": "Request is too large or empty"})
                 return
             payload = json.loads(self.rfile.read(size))
+            if path.startswith("/api/timer/"):
+                if path.endswith("/preview"):
+                    result = timer_preview(payload)
+                else:
+                    with self.server.takeover_lock:
+                        if path.endswith("/start") and self.server.wheel.read()["active"]:
+                            raise ValueError("Finish the wheel round before starting a timer.")
+                        result = self.server.timer.start(payload) if path.endswith("/start") else self.server.timer.cancel(payload)
+                self.respond(200, result)
+                return
             if path.startswith("/api/wheel/"):
-                result = self.server.wheel.spin(payload) if path.endswith("/spin") else self.server.wheel.done(payload)
+                with self.server.takeover_lock:
+                    if path.endswith("/spin") and self.server.timer.read()["active"]:
+                        raise ValueError("Cancel the timer before spinning the wheel.")
+                    result = self.server.wheel.spin(payload) if path.endswith("/spin") else self.server.wheel.done(payload)
                 self.respond(200, result)
                 return
             if path.startswith("/api/gifs/"):
